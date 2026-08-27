@@ -1,0 +1,19 @@
+{
+  "name": "kidgame-world",
+  "version": "1.0.0",
+  "description": "Juego de memoria para niños — KidGame World",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "juego",
+    "memoria",
+    "niños",
+    "educativo"
+  ],
+  "license": "MIT"
+}

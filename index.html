@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Juego de memoria para niños — KidGame World. ¡Encuentra todas las parejas de animales!">
+  <title>🎈 KidGame World — Juego de Memoria</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <header class="top">
+      <h1 class="title">🧠 Juego de Memoria</h1>
+      <p class="sub">¡Encuentra todas las parejas de animales, Campeón!</p>
+    </header>
+
+    <div class="panel">
+      <div class="stat"><span class="label">👆 Movimientos</span><span id="moves" class="value">0</span></div>
+      <div class="stat"><span class="label">🐾 Parejas</span><span id="pairs" class="value">0 / 6</span></div>
+      <div class="stat"><span class="label">⏱️ Tiempo</span><span id="time" class="value">0s</span></div>
+      <button id="restart" class="btn">🔄 Jugar de nuevo</button>
+    </div>
+
+    <div id="board" class="board"></div>
+  </div>
+
+  <div id="confetti-layer" class="confetti-layer" aria-hidden="true"></div>
+
+  <div id="win" class="win hidden">
+    <div class="win-card">
+      <h2>🎉 ¡Ganaste, Campeón!</h2>
+      <div id="winStars" class="win-stars"></div>
+      <p id="winInfo" class="win-info"></p>
+      <button id="playAgain" class="btn big">🚀 ¡Jugar otra vez!</button>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
