@@ -1,8 +1,23 @@
-/* ===== KidGame World — Juego de Memoria ===== */
+/* ===== KidGame World — Juego de Memoria (v1.1: niveles y temáticas) ===== */
 
-const EMOJIS = ['🐶', '🐱', '🦊', '🐸', '🐼', '🐵'];
+const THEMES = {
+  animales: { label: '🐾 Animales', emojis: ['🐶', '🐱', '🦊', '🐸', '🐼', '🐵', '🦁', '🐷', '🐮', '🐔', '🐙', '🦄'] },
+  frutas:   { label: '🍎 Frutas',   emojis: ['🍎', '🍌', '🍇', '🍓', '🍉', '🍍', '🥝', '🍒', '🥭', '🍑', '🍋', '🫐'] },
+  numeros:  { label: '🔢 Números',  emojis: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'], txt: true },
+  letras:   { label: '🔤 Letras',   emojis: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'], txt: true }
+};
+
+const LEVELS = [
+  { pairs: 6,  cols: 4, name: 'Principiante' },
+  { pairs: 8,  cols: 4, name: 'Explorador' },
+  { pairs: 12, cols: 6, name: 'Maestro' }
+];
+
+const TXT_COLORS = ['#ff6a88', '#ff9a56', '#e0a800', '#22a05a', '#3d7eff', '#b34dff'];
 
 const state = {
+  theme: 'animales',
+  level: 0,
   deck: [],
   flipped: [],
   matchedPairs: 0,
@@ -15,14 +30,18 @@ const state = {
 };
 
 const board = document.getElementById('board');
+const levelEl = document.getElementById('level');
 const movesEl = document.getElementById('moves');
 const pairsEl = document.getElementById('pairs');
 const timeEl = document.getElementById('time');
 const restartBtn = document.getElementById('restart');
+const themePicker = document.getElementById('themePicker');
 const winOverlay = document.getElementById('win');
+const winTitle = document.getElementById('winTitle');
 const winStars = document.getElementById('winStars');
 const winInfo = document.getElementById('winInfo');
 const playAgainBtn = document.getElementById('playAgain');
+const nextLevelBtn = document.getElementById('nextLevel');
 const confettiLayer = document.getElementById('confetti-layer');
 
 /* ===== Sonidos (Web Audio) ===== */
@@ -66,6 +85,10 @@ function soundWin() {
   const notes = [523, 659, 784, 1047, 784, 1047, 1319];
   notes.forEach((n, i) => tone(n, 0.22, 'sine', 0.22, i * 0.12));
 }
+function soundLevelUp() {
+  const notes = [392, 523, 659, 784, 1047];
+  notes.forEach((n, i) => tone(n, 0.2, 'triangle', 0.24, i * 0.1));
+}
 
 /* ===== Baraja ===== */
 function shuffle(arr) {
@@ -78,20 +101,27 @@ function shuffle(arr) {
 }
 
 function buildDeck() {
-  state.deck = shuffle([...EMOJIS, ...EMOJIS]).map((emoji, i) => ({ id: i, emoji }));
+  const theme = THEMES[state.theme];
+  const pairs = LEVELS[state.level].pairs;
+  const chosen = theme.emojis.slice(0, pairs);
+  state.deck = shuffle([...chosen, ...chosen]).map((emoji, i) => ({ id: i, emoji }));
 }
 
 /* ===== Tablero ===== */
 function renderBoard() {
+  board.className = `board cols-${LEVELS[state.level].cols}`;
   board.innerHTML = '';
-  state.deck.forEach((card) => {
+  const theme = THEMES[state.theme];
+  state.deck.forEach((card, i) => {
     const el = document.createElement('div');
     el.className = 'card';
     el.dataset.index = card.id;
+    const txtClass = theme.txt ? ' txt' : '';
+    const color = theme.txt ? ` style="color:${TXT_COLORS[i % TXT_COLORS.length]}"` : '';
     el.innerHTML = `
       <div class="card-inner">
         <div class="face back"></div>
-        <div class="face front">${card.emoji}</div>
+        <div class="face front${txtClass}"${color}>${card.emoji}</div>
       </div>`;
     el.addEventListener('click', () => onCardClick(el, card));
     board.appendChild(el);
@@ -120,17 +150,18 @@ function onCardClick(el, card) {
 function checkMatch() {
   const [a, b] = state.flipped;
   state.lock = true;
+  const totalPairs = LEVELS[state.level].pairs;
 
   if (a.card.emoji === b.card.emoji) {
     setTimeout(() => {
       a.el.classList.add('matched');
       b.el.classList.add('matched');
       state.matchedPairs += 1;
-      pairsEl.textContent = `${state.matchedPairs} / ${EMOJIS.length}`;
+      pairsEl.textContent = `${state.matchedPairs} / ${totalPairs}`;
       state.flipped = [];
       state.lock = false;
       soundMatch();
-      if (state.matchedPairs === EMOJIS.length) win();
+      if (state.matchedPairs === totalPairs) win();
     }, 450);
   } else {
     setTimeout(() => {
@@ -162,11 +193,17 @@ function starsFor(moves) {
 function win() {
   state.finished = true;
   clearInterval(state.timer);
-  soundWin();
+  const isLast = state.level === LEVELS.length - 1;
+  if (isLast) soundWin(); else soundLevelUp();
+
   const stars = starsFor(state.moves);
   winStars.textContent = '⭐'.repeat(stars);
+  winTitle.textContent = isLast ? '🏆 ¡Completaste todos los niveles!' : `🎉 ¡Nivel ${state.level + 1} completo!`;
   winInfo.textContent =
-    `Lo lograste con ${state.moves} movimientos en ${state.seconds} segundos. ¡Eres increíble!`;
+    `Temática: ${THEMES[state.theme].label} · ${state.moves} movimientos en ${state.seconds} segundos. ¡Eres increíble!`;
+  nextLevelBtn.classList.toggle('hidden', isLast);
+  playAgainBtn.textContent = isLast ? '🔄 Jugar de nuevo' : '🔁 Repetir nivel';
+
   setTimeout(() => {
     winOverlay.classList.remove('hidden');
     launchConfetti();
@@ -191,7 +228,8 @@ function launchConfetti() {
 }
 
 /* ===== Reiniciar ===== */
-function resetGame() {
+function resetGame(opts = {}) {
+  if (!opts.keepLevel) state.level = 0;
   state.flipped = [];
   state.matchedPairs = 0;
   state.moves = 0;
@@ -200,17 +238,40 @@ function resetGame() {
   state.finished = false;
   state.seconds = 0;
   clearInterval(state.timer);
-  movesEl.textContent = '0';
-  pairsEl.textContent = `0 / ${EMOJIS.length}`;
-  timeEl.textContent = '0s';
+  updateStats();
   winOverlay.classList.add('hidden');
   confettiLayer.innerHTML = '';
   buildDeck();
   renderBoard();
 }
 
-restartBtn.addEventListener('click', resetGame);
-playAgainBtn.addEventListener('click', resetGame);
+function updateStats() {
+  levelEl.textContent = `${state.level + 1} / ${LEVELS.length}`;
+  movesEl.textContent = '0';
+  pairsEl.textContent = `0 / ${LEVELS[state.level].pairs}`;
+  timeEl.textContent = '0s';
+}
+
+restartBtn.addEventListener('click', () => resetGame({ keepLevel: true }));
+
+/* ===== Selector de temática ===== */
+themePicker.addEventListener('click', (e) => {
+  const btn = e.target.closest('.theme-btn');
+  if (!btn) return;
+  themePicker.querySelectorAll('.theme-btn').forEach((b) => b.classList.remove('active'));
+  btn.classList.add('active');
+  state.theme = btn.dataset.theme;
+  resetGame({ keepLevel: false });
+});
+
+/* ===== Botones de victoria ===== */
+playAgainBtn.addEventListener('click', () => resetGame({ keepLevel: true }));
+nextLevelBtn.addEventListener('click', () => {
+  if (state.level < LEVELS.length - 1) {
+    state.level += 1;
+    resetGame({ keepLevel: true });
+  }
+});
 
 /* ===== Arranque ===== */
 resetGame();
