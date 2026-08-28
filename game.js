@@ -297,9 +297,17 @@ function refillLives() {
   spendCoins(REFILL_COST);
   state.lives = state.livesMax;
   state.lastLifeRegen = Date.now();
+  state.finished = false;
   updateLivesUI();
   if (gameOverEl) gameOverEl.classList.add('hidden');
   resetGame({ keepLevel: true });
+  showPWFeedback('❤️ ¡Vidas recargadas!', 'success');
+  speak('¡Vidas recargadas! ¡A jugar!');
+}
+
+function waitForHearts() {
+  if (gameOverEl) gameOverEl.classList.add('hidden');
+  showPWFeedback('⏳ Corazón gratis en ~30 min. ¡Vuelve pronto!', 'info');
 }
 
 /* ===== GUARDAR / CARGAR (localStorage) ===== */
@@ -957,7 +965,8 @@ function resetGame(opts = {}) {
   buildDeck();
   renderBoard();
   updatePowerupUI();
-  if (state.lives <= 0) setTimeout(gameOver, 400);
+  // Si no hay vidas, mostrar game over (pero solo si no estaba ya en game over)
+  if (state.lives <= 0 && !state.finished) setTimeout(gameOver, 400);
 }
 
 function updateStats() {
@@ -1027,9 +1036,7 @@ if (voiceBtn) voiceBtn.addEventListener('click', toggleVoice);
 
 // Vidas
 if (refillLivesBtn) refillLivesBtn.addEventListener('click', refillLives);
-if (waitGameOverBtn) waitGameOverBtn.addEventListener('click', () => {
-  if (gameOverEl) gameOverEl.classList.add('hidden');
-});
+if (waitGameOverBtn) waitGameOverBtn.addEventListener('click', waitForHearts);
 
 /* ===== ARRANQUE ===== */
 loadGame();
