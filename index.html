@@ -21,6 +21,7 @@
       </div>
       <div class="top-bar-center">
         <span id="coinsCount" class="coins-display">🪙 0</span>
+        <span id="livesDisplay" class="lives-display" title="Vidas">❤️❤️❤️</span>
         <span id="streakCount" class="streak-display">⭐ 0 días</span>
       </div>
       <button id="shopBtn" class="shop-btn">🏪 Tienda</button>
@@ -81,6 +82,18 @@
       <div class="modal-sub">Gasta tus 🪙 monedas en power-ups y temas</div>
       <div id="shopItems" class="shop-items"></div>
       <button id="shopClose" class="modal-close">✅ Cerrar tienda</button>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: GAME OVER ===== -->
+  <div id="gameOver" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-title">💔 ¡Te quedaste sin vidas!</div>
+      <div id="gameOverInfo" class="modal-sub"></div>
+      <div class="win-actions">
+        <button id="refillLives" class="btn big next">🪙 Recargar vidas</button>
+        <button id="waitGameOver" class="btn big">⏳ Esperar</button>
+      </div>
     </div>
   </div>
 

@@ -64,6 +64,10 @@ const state = {
   powerupActive: false,
   // Nuevo: Voces
   voicesEnabled: true,
+  // Nuevo: Vidas (estilo Duolingo)
+  lives: 3,
+  livesMax: 3,
+  lastLifeRegen: 0,
   // Nuevo: Temas comprados
   boughtThemes: [],
   activeTheme: 'default'
@@ -104,6 +108,11 @@ const pauseCount = document.getElementById('pwPauseCount');
 const wildcardCount = document.getElementById('pwWildcardCount');
 const pwFeedback = document.getElementById('pwFeedback');
 const voiceBtn = document.getElementById('voiceBtn');
+const livesDisplay = document.getElementById('livesDisplay');
+const gameOverEl = document.getElementById('gameOver');
+const gameOverInfo = document.getElementById('gameOverInfo');
+const refillLivesBtn = document.getElementById('refillLives');
+const waitGameOverBtn = document.getElementById('waitGameOver');
 
 /* ===== SONIDOS (Web Audio) ===== */
 let audioCtx = null;
@@ -211,6 +220,69 @@ if (window.speechSynthesis) {
   speechSynthesis.onvoiceschanged = () => { /* lista lista */ };
 }
 
+/* ===== VIDAS (❤️ estilo Duolingo) ===== */
+const LIFE_REGEN_MS = 30 * 60 * 1000; // 1 corazón cada 30 minutos
+const REFILL_COST = 20; // monedas para recargar vidas
+
+function updateLivesUI() {
+  if (!livesDisplay) return;
+  const full = '❤️'.repeat(Math.max(0, state.lives));
+  const empty = '🖤'.repeat(Math.max(0, state.livesMax - state.lives));
+  livesDisplay.textContent = full + empty;
+  livesDisplay.title = `${state.lives} de ${state.livesMax} vidas`;
+}
+
+function regenHearts() {
+  if (state.lives >= state.livesMax) return;
+  const now = Date.now();
+  const base = state.lastLifeRegen || now;
+  const elapsed = now - base;
+  const gained = Math.floor(elapsed / LIFE_REGEN_MS);
+  if (gained > 0) {
+    state.lives = Math.min(state.livesMax, state.lives + gained);
+    state.lastLifeRegen = state.lives >= state.livesMax ? now : base + gained * LIFE_REGEN_MS;
+    saveGame();
+    updateLivesUI();
+  }
+}
+
+function loseLife() {
+  if (state.lives <= 0) return;
+  state.lives -= 1;
+  updateLivesUI();
+  saveGame();
+  if (state.lives <= 0) {
+    setTimeout(gameOver, 700);
+  }
+}
+
+function gameOver() {
+  if (state.finished) return;
+  state.finished = true;
+  clearInterval(state.timer);
+  if (!gameOverEl || !gameOverInfo) return;
+  const now = Date.now();
+  const waitMs = Math.max(0, LIFE_REGEN_MS - (now - (state.lastLifeRegen || now)));
+  const waitMin = Math.ceil(waitMs / 60000);
+  gameOverInfo.innerHTML = state.coins >= REFILL_COST
+    ? `Te quedaste sin vidas 💔<br>Recarga con <b>${REFILL_COST} 🪙</b> (tienes ${state.coins}) o espera <b>~${waitMin} min</b> para un corazón.`
+    : `Te quedaste sin vidas 💔<br>Necesitas ${REFILL_COST} 🪙 para recargar (tienes ${state.coins}).<br>Un corazón llegará en <b>~${waitMin} min</b>.`;
+  gameOverEl.classList.remove('hidden');
+}
+
+function refillLives() {
+  if (state.coins < REFILL_COST) {
+    showPWFeedback(`🪙 ¡Necesitas ${REFILL_COST} monedas!`, 'error');
+    return;
+  }
+  spendCoins(REFILL_COST);
+  state.lives = state.livesMax;
+  state.lastLifeRegen = Date.now();
+  updateLivesUI();
+  if (gameOverEl) gameOverEl.classList.add('hidden');
+  resetGame({ keepLevel: true });
+}
+
 /* ===== GUARDAR / CARGAR (localStorage) ===== */
 const SAVE_KEY = 'kidgame_world_save_v2';
 
@@ -225,7 +297,9 @@ function saveGame() {
     powerups: { ...state.powerups },
     boughtThemes: [...state.boughtThemes],
     activeTheme: state.activeTheme,
-    voicesEnabled: state.voicesEnabled
+    voicesEnabled: state.voicesEnabled,
+    lives: state.lives,
+    lastLifeRegen: state.lastLifeRegen
   };
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -247,6 +321,8 @@ function loadGame() {
     state.boughtThemes = data.boughtThemes || [];
     state.activeTheme = data.activeTheme || 'default';
     state.voicesEnabled = data.voicesEnabled !== false;
+    state.lives = Math.min(state.livesMax, data.lives ?? 3);
+    state.lastLifeRegen = data.lastLifeRegen || 0;
   } catch (e) { /* ignorar */ }
 }
 
@@ -611,6 +687,7 @@ function checkMatch() {
       state.lock = false;
       soundNoMatch();
       speakRandom(VOICE_ENCOURAGE);
+      loseLife();
     }, 900);
   }
 }
@@ -695,6 +772,7 @@ function resetGame(opts = {}) {
   buildDeck();
   renderBoard();
   updatePowerupUI();
+  if (state.lives <= 0) setTimeout(gameOver, 400);
 }
 
 function updateStats() {
@@ -752,6 +830,12 @@ if (wildcardBtn) wildcardBtn.addEventListener('click', useWildcard);
 // Voces
 if (voiceBtn) voiceBtn.addEventListener('click', toggleVoice);
 
+// Vidas
+if (refillLivesBtn) refillLivesBtn.addEventListener('click', refillLives);
+if (waitGameOverBtn) waitGameOverBtn.addEventListener('click', () => {
+  if (gameOverEl) gameOverEl.classList.add('hidden');
+});
+
 /* ===== ARRANQUE ===== */
 loadGame();
 updateCoinsUI();
@@ -760,4 +844,7 @@ updateAvatarUI();
 updatePowerupUI();
 renderAvatarPicker();
 syncVoiceBtn();
+regenHearts();
+updateLivesUI();
+setInterval(regenHearts, 30000); // revisar regeneración cada 30s
 resetGame();
