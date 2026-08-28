@@ -990,12 +990,14 @@ function showGameOverScreen() {
   
   state.finished = true;
   
+  const practiceLink = `<br>🎮 O juega en <b>modo práctica</b> sin ganar monedas.`;
+  
   if (state.coins >= REFILL_COST) {
-    gameOverInfo.innerHTML = `Te quedaste sin vidas 💔<br>Recarga con <b>${REFILL_COST} 🪙</b> (tienes ${state.coins}) o espera <b>~${waitMin} min</b> para un corazón.`;
+    gameOverInfo.innerHTML = `Te quedaste sin vidas 💔<br>Recarga con <b>${REFILL_COST} 🪙</b> (tienes ${state.coins}) o espera <b>~${waitMin} min</b> para un corazón.${practiceLink}`;
     refillLivesBtn.disabled = false;
     refillLivesBtn.classList.remove('no-funds');
   } else {
-    gameOverInfo.innerHTML = `Te quedaste sin vidas 💔<br>Necesitas ${REFILL_COST} 🪙 para recargar (tienes ${state.coins}).<br>Un corazón llegará en <b>~${waitMin} min</b>.`;
+    gameOverInfo.innerHTML = `Te quedaste sin vidas 💔<br>Necesitas ${REFILL_COST} 🪙 para recargar (tienes ${state.coins}).<br>Un corazón llegará en <b>~${waitMin} min</b>.${practiceLink}`;
     refillLivesBtn.disabled = true;
     refillLivesBtn.classList.add('no-funds');
   }
