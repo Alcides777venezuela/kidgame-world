@@ -312,6 +312,19 @@ body {
 .btn.next:hover { box-shadow: 0 6px 0 #1f9d50, 0 10px 20px rgba(0, 0, 0, 0.3); }
 .btn.next:active { box-shadow: 0 1px 0 #1f9d50; }
 
+/* Botón de voces */
+.voice-btn {
+  min-width: 46px;
+  padding: 8px 12px;
+  font-size: 1.1rem;
+}
+
+.voice-btn.muted {
+  opacity: 0.55;
+  filter: grayscale(1);
+  background: linear-gradient(180deg, #b8b8b8, #9a9a9a);
+}
+
 /* ===== MODAL BASE ===== */
 .modal {
   position: fixed;

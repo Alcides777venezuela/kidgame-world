@@ -62,6 +62,8 @@ const state = {
   // Nuevo: Power-ups
   powerups: { magnifier: 0, pause: 0, wildcard: 0 },
   powerupActive: false,
+  // Nuevo: Voces
+  voicesEnabled: true,
   // Nuevo: Temas comprados
   boughtThemes: [],
   activeTheme: 'default'
@@ -101,6 +103,7 @@ const magnifierCount = document.getElementById('pwMagnifierCount');
 const pauseCount = document.getElementById('pwPauseCount');
 const wildcardCount = document.getElementById('pwWildcardCount');
 const pwFeedback = document.getElementById('pwFeedback');
+const voiceBtn = document.getElementById('voiceBtn');
 
 /* ===== SONIDOS (Web Audio) ===== */
 let audioCtx = null;
@@ -150,6 +153,64 @@ function soundLevelUp() {
 function soundCoin() { tone(880, 0.08, 'sine', 0.18); tone(1100, 0.1, 'sine', 0.18, 0.06); }
 function soundStreak() { tone(660, 0.15, 'triangle', 0.2); tone(880, 0.2, 'sine', 0.22, 0.1); tone(1100, 0.25, 'sine', 0.25, 0.2); }
 
+/* ===== VOCES (Web Speech API) ===== */
+const VOICE_PRAISES = ['¡Muy bien!', '¡Excelente!', '¡Genial!', '¡Eres un campeón!', '¡Súper!', '¡Lo lograste!'];
+const VOICE_ENCOURAGE = ['¡Inténtalo otra vez!', '¡Casi!', '¡Tú puedes!', '¡Vamos!'];
+
+function pickSpanishVoice() {
+  if (!window.speechSynthesis) return null;
+  const voices = speechSynthesis.getVoices();
+  if (!voices.length) return null;
+  const prefer = ['es-VE', 'es-MX', 'es-ES', 'es-US', 'es-AR', 'es-CO', 'es-CL'];
+  for (const l of prefer) {
+    const v = voices.find(v => v.lang && v.lang.toLowerCase().replace('_', '-') === l.toLowerCase());
+    if (v) return v;
+  }
+  return voices.find(v => v.lang && v.lang.toLowerCase().startsWith('es')) || null;
+}
+
+function speak(text) {
+  if (!state.voicesEnabled) return;
+  if (!window.speechSynthesis) return;
+  try {
+    speechSynthesis.cancel(); // que no se encimen frases
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'es-ES';
+    u.rate = 1.05;
+    u.pitch = 1.2; // voz alegre, amigable para niños
+    const v = pickSpanishVoice();
+    if (v) u.voice = v;
+    speechSynthesis.speak(u);
+  } catch (e) { /* sin voz, no pasa nada */ }
+}
+
+function speakRandom(arr) {
+  if (!arr.length) return;
+  speak(arr[Math.floor(Math.random() * arr.length)]);
+}
+
+function toggleVoice() {
+  state.voicesEnabled = !state.voicesEnabled;
+  if (voiceBtn) {
+    voiceBtn.textContent = state.voicesEnabled ? '🔊' : '🔇';
+    voiceBtn.classList.toggle('muted', !state.voicesEnabled);
+  }
+  saveGame();
+  if (state.voicesEnabled) speak('¡Voces activadas!');
+}
+
+function syncVoiceBtn() {
+  if (!voiceBtn) return;
+  voiceBtn.textContent = state.voicesEnabled ? '🔊' : '🔇';
+  voiceBtn.classList.toggle('muted', !state.voicesEnabled);
+}
+
+// Cargar voces disponibles (Chrome las carga de forma asíncrona)
+if (window.speechSynthesis) {
+  speechSynthesis.getVoices();
+  speechSynthesis.onvoiceschanged = () => { /* lista lista */ };
+}
+
 /* ===== GUARDAR / CARGAR (localStorage) ===== */
 const SAVE_KEY = 'kidgame_world_save_v2';
 
@@ -163,7 +224,8 @@ function saveGame() {
     unlockedAvatars: state.unlockedAvatars,
     powerups: { ...state.powerups },
     boughtThemes: [...state.boughtThemes],
-    activeTheme: state.activeTheme
+    activeTheme: state.activeTheme,
+    voicesEnabled: state.voicesEnabled
   };
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -184,6 +246,7 @@ function loadGame() {
     state.powerups = data.powerups || { magnifier: 0, pause: 0, wildcard: 0 };
     state.boughtThemes = data.boughtThemes || [];
     state.activeTheme = data.activeTheme || 'default';
+    state.voicesEnabled = data.voicesEnabled !== false;
   } catch (e) { /* ignorar */ }
 }
 
@@ -537,6 +600,7 @@ function checkMatch() {
       state.flipped = [];
       state.lock = false;
       soundMatch();
+      speakRandom(VOICE_PRAISES);
       if (state.matchedPairs === totalPairs) win();
     }, 450);
   } else {
@@ -546,6 +610,7 @@ function checkMatch() {
       state.flipped = [];
       state.lock = false;
       soundNoMatch();
+      speakRandom(VOICE_ENCOURAGE);
     }, 900);
   }
 }
@@ -572,6 +637,7 @@ function win() {
   clearInterval(state.timer);
   const isLast = state.level === LEVELS.length - 1;
   if (isLast) soundWin(); else soundLevelUp();
+  setTimeout(() => speak(isLast ? '¡Ganaste! ¡Eres un campeón!' : '¡Nivel completado! ¡Increíble!'), 350);
 
   const stars = starsFor(state.moves);
   
@@ -683,6 +749,9 @@ if (magnifierBtn) magnifierBtn.addEventListener('click', useMagnifier);
 if (pauseBtn) pauseBtn.addEventListener('click', usePause);
 if (wildcardBtn) wildcardBtn.addEventListener('click', useWildcard);
 
+// Voces
+if (voiceBtn) voiceBtn.addEventListener('click', toggleVoice);
+
 /* ===== ARRANQUE ===== */
 loadGame();
 updateCoinsUI();
@@ -690,4 +759,5 @@ updateStreakUI();
 updateAvatarUI();
 updatePowerupUI();
 renderAvatarPicker();
+syncVoiceBtn();
 resetGame();
