@@ -26,6 +26,7 @@
         <span id="livesDisplay" class="lives-display" title="Vidas">❤️❤️❤️</span>
         <span id="streakCount" class="streak-display">⭐ 0 días</span>
       </div>
+      <button id="badgeBtn" class="shop-btn" title="Tus insignias">🏅 <span id="badgeCount" class="badge-count">0</span></button>
       <button id="shopBtn" class="shop-btn">🏪 Tienda</button>
     </div>
 
@@ -84,6 +85,16 @@
       <div class="modal-sub">Gasta tus 🪙 monedas en power-ups y temas</div>
       <div id="shopItems" class="shop-items"></div>
       <button id="shopClose" class="modal-close">✅ Cerrar tienda</button>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: INSIGNIAS ===== -->
+  <div id="badgeModal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-title">🏅 Tus Insignias</div>
+      <div class="modal-sub">¡Desbloquéalas todas jugando!</div>
+      <div id="badgeGrid" class="badge-grid"></div>
+      <button id="badgeClose" class="modal-close">✅ Cerrar</button>
     </div>
   </div>
 

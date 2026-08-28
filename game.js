@@ -73,6 +73,12 @@ const state = {
   eggHatched: false,
   maxStreakEver: 0,  // racha máxima histórica (para no perder la mascota)
   petType: null,     // null o emoji del animal mascota
+  // 🏅 Insignias
+  badges: [],
+  threeStarLevels: 0,
+  perfectLevels: 0,
+  failedPairs: 0,
+  allLevelsDone: false,
   // Nuevo: Temas comprados
   boughtThemes: [],
   activeTheme: 'default'
@@ -113,6 +119,11 @@ const pauseCount = document.getElementById('pwPauseCount');
 const wildcardCount = document.getElementById('pwWildcardCount');
 const pwFeedback = document.getElementById('pwFeedback');
 const voiceBtn = document.getElementById('voiceBtn');
+const badgeBtn = document.getElementById('badgeBtn');
+const badgeCountEl = document.getElementById('badgeCount');
+const badgeModal = document.getElementById('badgeModal');
+const badgeClose = document.getElementById('badgeClose');
+const badgeGrid = document.getElementById('badgeGrid');
 const livesDisplay = document.getElementById('livesDisplay');
 const gameOverEl = document.getElementById('gameOver');
 const gameOverInfo = document.getElementById('gameOverInfo');
@@ -311,7 +322,11 @@ function saveGame() {
     eggStage: state.eggStage,
     eggHatched: state.eggHatched,
     maxStreakEver: state.maxStreakEver,
-    petType: state.petType
+    petType: state.petType,
+    badges: [...state.badges],
+    threeStarLevels: state.threeStarLevels,
+    perfectLevels: state.perfectLevels,
+    allLevelsDone: state.allLevelsDone
   };
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -339,7 +354,65 @@ function loadGame() {
     state.eggHatched = data.eggHatched ?? false;
     state.maxStreakEver = data.maxStreakEver ?? 0;
     state.petType = data.petType || null;
+    state.badges = data.badges || [];
+    state.threeStarLevels = data.threeStarLevels || 0;
+    state.perfectLevels = data.perfectLevels || 0;
+    state.allLevelsDone = data.allLevelsDone || false;
   } catch (e) { /* ignorar */ }
+}
+
+/* ===== INSIGNIAS 🏅 ===== */
+const BADGES = [
+  { id: 'primer-juego', emoji: '🎮', label: 'Primer Juego', desc: 'Juega tu primera partida', check: () => state.streak > 0 },
+  { id: 'caliente', emoji: '🔥', label: 'Vas Caliente', desc: 'Racha de 3 días', check: () => state.maxStreakEver >= 3 },
+  { id: 'aguila', emoji: '🦅', label: 'Águila', desc: 'Racha de 7 días', check: () => state.maxStreakEver >= 7 },
+  { id: 'leyenda', emoji: '🏆', label: 'Leyenda', desc: 'Racha de 30 días', check: () => state.maxStreakEver >= 30 },
+  { id: 'estrella', emoji: '⭐', label: 'Tres Estrellas', desc: 'Gana un nivel con 3 estrellas', check: () => state.threeStarLevels > 0 },
+  { id: 'genio', emoji: '🧠', label: 'Genio', desc: 'Completa un nivel sin fallos', check: () => state.perfectLevels > 0 },
+  { id: 'rico', emoji: '💰', label: 'Rico', desc: 'Acumula 100 monedas', check: () => state.totalCoinsEarned >= 100 },
+  { id: 'maestro', emoji: '👑', label: 'Maestro', desc: 'Completa los 3 niveles', check: () => state.allLevelsDone },
+  { id: 'criador', emoji: '🐣', label: 'Criador', desc: 'Haz nacer tu Huevo Mágico', check: () => state.eggHatched },
+  { id: 'coleccionista', emoji: '🎨', label: 'Coleccionista', desc: 'Compra 2 temas', check: () => state.boughtThemes.length >= 2 }
+];
+
+function checkBadges() {
+  if (!Array.isArray(state.badges)) state.badges = [];
+  let nuevo = false;
+  BADGES.forEach(b => {
+    if (!state.badges.includes(b.id) && b.check()) {
+      state.badges.push(b.id);
+      nuevo = true;
+      showPWFeedback(`🏅 ¡Insignia desbloqueada: ${b.emoji} ${b.label}!`, 'success');
+      soundCoin();
+      speak(`¡Insignia desbloqueada! ${b.label}`);
+    }
+  });
+  if (nuevo) {
+    saveGame();
+    renderBadges();
+    updateBadgeUI();
+  }
+}
+
+function renderBadges() {
+  if (!badgeGrid) return;
+  badgeGrid.innerHTML = '';
+  BADGES.forEach(b => {
+    const unlocked = state.badges.includes(b.id);
+    const el = document.createElement('div');
+    el.className = `badge-card${unlocked ? ' unlocked' : ' locked'}`;
+    el.innerHTML = `
+      <div class="badge-emoji">${unlocked ? b.emoji : '🔒'}</div>
+      <div class="badge-label">${b.label}</div>
+      <div class="badge-desc">${b.desc}</div>
+    `;
+    badgeGrid.appendChild(el);
+  });
+}
+
+function updateBadgeUI() {
+  if (!badgeCountEl) return;
+  badgeCountEl.textContent = state.badges.length;
 }
 
 /* ===== RACHAS ===== */
@@ -359,6 +432,7 @@ function updateStreak() {
   state.lastPlayDate = today;
   updateStreakUI();
   saveGame();
+  checkBadges();
 }
 
 function getStreakEmoji() {
@@ -789,6 +863,7 @@ function checkMatch() {
       state.lock = false;
       soundNoMatch();
       speakRandom(VOICE_ENCOURAGE);
+      state.failedPairs += 1;
       loseLife();
     }, 900);
   }
@@ -819,7 +894,12 @@ function win() {
   setTimeout(() => speak(isLast ? '¡Ganaste! ¡Eres un campeón!' : '¡Nivel completado! ¡Increíble!'), 350);
 
   const stars = starsFor(state.moves);
-  
+
+  // 🏅 Registro de logros para insignias
+  if (stars === 3) state.threeStarLevels += 1;
+  if (state.failedPairs === 0) state.perfectLevels += 1;
+  if (isLast) state.allLevelsDone = true;
+
   // Monedas por nivel completado
   const coinReward = (stars * 5) + (state.level + 1) * 3;
   addCoins(coinReward);
@@ -835,6 +915,8 @@ function win() {
     winOverlay.classList.remove('hidden');
     launchConfetti();
   }, 600);
+
+  checkBadges();
 }
 
 /* ===== CONFETI ===== */
@@ -867,6 +949,7 @@ function resetGame(opts = {}) {
   state.finished = false;
   state.seconds = 0;
   state.powerupActive = false;
+  state.failedPairs = 0;
   clearInterval(state.timer);
   updateStats();
   winOverlay.classList.add('hidden');
@@ -914,6 +997,16 @@ if (shopBtn) {
     shopModal.classList.remove('hidden');
   });
 }
+
+// Insignias
+if (badgeBtn) badgeBtn.addEventListener('click', () => {
+  renderBadges();
+  badgeModal.classList.remove('hidden');
+});
+if (badgeClose) badgeClose.addEventListener('click', () => badgeModal.classList.add('hidden'));
+if (badgeModal) badgeModal.addEventListener('click', (e) => {
+  if (e.target === badgeModal) badgeModal.classList.add('hidden');
+});
 if (shopClose) {
   shopClose.addEventListener('click', () => shopModal.classList.add('hidden'));
 }
@@ -950,4 +1043,6 @@ regenHearts();
 updateLivesUI();
 updateEggUI();
 setInterval(regenHearts, 30000); // revisar regeneración cada 30s
+renderBadges();
+updateBadgeUI();
 resetGame();

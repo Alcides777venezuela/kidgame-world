@@ -228,6 +228,32 @@ body {
   letter-spacing: 1px;
 }
 
+/* Insignias */
+.badge-count { font-size: 0.8rem; }
+
+.badge-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.badge-card {
+  background: rgba(0,0,0,0.12);
+  border-radius: 14px;
+  padding: 12px 8px;
+  text-align: center;
+}
+
+.badge-card.unlocked { border: 2px solid var(--gold); }
+.badge-card.locked { opacity: 0.55; filter: grayscale(0.8); }
+
+.badge-emoji { font-size: 2rem; margin-bottom: 4px; }
+.badge-label { font-weight: 800; font-size: 0.85rem; }
+.badge-desc { font-size: 0.7rem; opacity: 0.85; margin-top: 2px; }
+
 .shop-btn {
   font-family: inherit;
   font-size: 1.3rem;
