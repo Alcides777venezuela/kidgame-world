@@ -100,6 +100,93 @@ body {
   transform: scale(1.15);
 }
 
+/* ===== 🥚 Huevo Mágico ===== */
+.egg-display {
+  font-size: 1.6rem;
+  cursor: help;
+  transition: transform 0.3s ease, filter 0.3s ease;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.12);
+  animation: egg-pulse 2s ease-in-out infinite;
+}
+
+.egg-display.broken {
+  filter: grayscale(1);
+  animation: none;
+  opacity: 0.5;
+}
+
+.egg-display.cold {
+  animation: egg-pulse 3s ease-in-out infinite;
+}
+
+.egg-display.warm {
+  animation: egg-pulse 1.5s ease-in-out infinite;
+  box-shadow: 0 0 12px rgba(255, 200, 0, 0.4);
+}
+
+.egg-display.pipping {
+  animation: egg-shake 0.4s ease-in-out infinite;
+  box-shadow: 0 0 18px rgba(255, 180, 0, 0.6);
+}
+
+.egg-display.hatched {
+  animation: egg-rainbow 1s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.7);
+}
+
+@keyframes egg-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+}
+
+@keyframes egg-shake {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  25% { transform: translateX(-2px) rotate(-5deg); }
+  75% { transform: translateX(2px) rotate(5deg); }
+}
+
+@keyframes egg-rainbow {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+/* ===== 🐤 Mascota ===== */
+.pet-display {
+  font-size: 1.7rem;
+  cursor: help;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 215, 0, 0.15);
+  border: 2px solid var(--gold);
+  animation: pet-idle 3s ease-in-out infinite;
+}
+
+.pet-display.pet-bounce {
+  animation: pet-bounce 0.6s ease 3 !important;
+}
+
+@keyframes pet-idle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes pet-bounce {
+  0% { transform: scale(1) translateY(0); }
+  40% { transform: scale(1.25) translateY(-8px); }
+  60% { transform: scale(1.1) translateY(-2px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
 .top-bar-center {
   display: flex;
   align-items: center;

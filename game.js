@@ -68,6 +68,11 @@ const state = {
   lives: 3,
   livesMax: 3,
   lastLifeRegen: 0,
+  // 🥚 Huevo Mágico
+  eggStage: 0,       // 0=roto, 1=🥚frío, 2=🥚tibio, 3=🐣picando, 4=🐤nacido
+  eggHatched: false,
+  maxStreakEver: 0,  // racha máxima histórica (para no perder la mascota)
+  petType: null,     // null o emoji del animal mascota
   // Nuevo: Temas comprados
   boughtThemes: [],
   activeTheme: 'default'
@@ -113,6 +118,9 @@ const gameOverEl = document.getElementById('gameOver');
 const gameOverInfo = document.getElementById('gameOverInfo');
 const refillLivesBtn = document.getElementById('refillLives');
 const waitGameOverBtn = document.getElementById('waitGameOver');
+// 🥚 Huevo Mágico refs
+const eggDisplay = document.getElementById('eggDisplay');
+const petDisplay = document.getElementById('petDisplay');
 
 /* ===== SONIDOS (Web Audio) ===== */
 let audioCtx = null;
@@ -299,7 +307,11 @@ function saveGame() {
     activeTheme: state.activeTheme,
     voicesEnabled: state.voicesEnabled,
     lives: state.lives,
-    lastLifeRegen: state.lastLifeRegen
+    lastLifeRegen: state.lastLifeRegen,
+    eggStage: state.eggStage,
+    eggHatched: state.eggHatched,
+    maxStreakEver: state.maxStreakEver,
+    petType: state.petType
   };
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -323,6 +335,10 @@ function loadGame() {
     state.voicesEnabled = data.voicesEnabled !== false;
     state.lives = Math.min(state.livesMax, data.lives ?? 3);
     state.lastLifeRegen = data.lastLifeRegen || 0;
+    state.eggStage = data.eggStage ?? 0;
+    state.eggHatched = data.eggHatched ?? false;
+    state.maxStreakEver = data.maxStreakEver ?? 0;
+    state.petType = data.petType || null;
   } catch (e) { /* ignorar */ }
 }
 
@@ -367,6 +383,92 @@ function updateStreakUI() {
   if (streakEl) {
     streakEl.textContent = `${getStreakEmoji()} ${state.streak}${state.streak === 1 ? ' día' : ' días'}`;
   }
+}
+
+/* ===== 🥚 HUEVO MÁGICO ===== */
+const EGG_STAGES = [
+  { emoji: '💔', label: 'Huevo roto', msg: '¡Vuelve mañana para empezar un nuevo huevo! 🥚', class: 'broken' },
+  { emoji: '🥚', label: 'Huevo frío', msg: 'Todavía está frío... ¡juega mañana! 🔥', class: 'cold' },
+  { emoji: '🥚', label: 'Huevo tibio', msg: '¡Se está moviendo! 2 días más 🔥🔥', class: 'warm' },
+  { emoji: '🐣', label: '¡Está picando!', msg: '¡Se ve un piquito! 1 día más 🐣', class: 'pipping' },
+  { emoji: '🐤', label: '¡Naciste! 🎉', msg: '¡Tu mascota ha nacido! Cuídala 💛', class: 'hatched' }
+];
+
+const PETS = ['🐶', '🐱', '🐼', '🦊', '🐸', '🐵', '🐰', '🦄'];
+
+function updateEgg() {
+  if (!eggDisplay && !petDisplay) return;
+
+  // Si ya nació, mostrar mascota
+  if (state.eggHatched) {
+    if (eggDisplay) eggDisplay.classList.add('hidden');
+    if (petDisplay) {
+      petDisplay.classList.remove('hidden');
+      petDisplay.textContent = state.petType || '🐤';
+      petDisplay.title = '¡Tu mascota! 🎉';
+    }
+    return;
+  }
+
+  // Calcular etapa según racha
+  // stage 0 = roto (streak 0)
+  // stage 1 = frío (streak 1-2)
+  // stage 2 = tibio (streak 3-4)
+  // stage 3 = picando (streak 5-6)
+  // stage 4 = nacido (streak 7+)
+  let stage = 0;
+  if (state.streak >= 7) stage = 4;
+  else if (state.streak >= 5) stage = 3;
+  else if (state.streak >= 3) stage = 2;
+  else if (state.streak >= 1) stage = 1;
+
+  state.eggStage = stage;
+  
+  if (eggDisplay) {
+    eggDisplay.classList.remove('hidden');
+    eggDisplay.textContent = EGG_STAGES[stage].emoji;
+    eggDisplay.className = `egg-display ${EGG_STAGES[stage].class}`;
+    eggDisplay.title = EGG_STAGES[stage].msg;
+  }
+
+  // ¿Racha 7+? ¡El huevo nace!
+  if (state.streak >= 7 && !state.eggHatched) {
+    hatchEgg();
+  }
+}
+
+function hatchEgg() {
+  state.eggHatched = true;
+  state.eggStage = 4;
+  state.petType = PETS[Math.floor(Math.random() * PETS.length)];
+  state.maxStreakEver = Math.max(state.maxStreakEver, state.streak);
+  saveGame();
+
+  // Animación de nacimiento
+  launchConfetti();
+  
+  // Sonido especial
+  soundWin();
+  setTimeout(() => speak('¡Tu mascota ha nacido! 🎉 Cuídala mucho'), 500);
+
+  // Mostrar notificación
+  setTimeout(() => {
+    if (petDisplay) {
+      petDisplay.classList.remove('hidden');
+      petDisplay.textContent = state.petType;
+      petDisplay.style.animation = 'none';
+      // Forzar reflow para reiniciar animación
+      void petDisplay.offsetWidth;
+      petDisplay.classList.add('pet-bounce');
+    }
+    if (eggDisplay) eggDisplay.classList.add('hidden');
+  }, 800);
+
+  showPWFeedback(`🐣 ¡Tu mascota ${state.petType} ha nacido! 🎉`, 'success');
+}
+
+function updateEggUI() {
+  updateEgg();
 }
 
 /* ===== MONEDAS ===== */
@@ -846,5 +948,6 @@ renderAvatarPicker();
 syncVoiceBtn();
 regenHearts();
 updateLivesUI();
+updateEggUI();
 setInterval(regenHearts, 30000); // revisar regeneración cada 30s
 resetGame();
