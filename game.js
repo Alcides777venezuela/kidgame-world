@@ -79,6 +79,8 @@ const state = {
   perfectLevels: 0,
   failedPairs: 0,
   allLevelsDone: false,
+  // 🎮 Modo práctica (jugar sin vidas, sin monedas)
+  practiceMode: false,
   // Nuevo: Temas comprados
   boughtThemes: [],
   activeTheme: 'default'
@@ -129,6 +131,7 @@ const gameOverEl = document.getElementById('gameOver');
 const gameOverInfo = document.getElementById('gameOverInfo');
 const refillLivesBtn = document.getElementById('refillLives');
 const waitGameOverBtn = document.getElementById('waitGameOver');
+const practiceBtn = document.getElementById('practiceBtn');
 // 🥚 Huevo Mágico refs
 const eggDisplay = document.getElementById('eggDisplay');
 const petDisplay = document.getElementById('petDisplay');
@@ -260,6 +263,7 @@ function regenHearts() {
   if (gained > 0) {
     state.lives = Math.min(state.livesMax, state.lives + gained);
     state.lastLifeRegen = state.lives >= state.livesMax ? now : base + gained * LIFE_REGEN_MS;
+    if (state.lives > 0) state.practiceMode = false;
     saveGame();
     updateLivesUI();
   }
@@ -277,16 +281,15 @@ function loseLife() {
 
 function gameOver() {
   if (state.finished) return;
-  state.finished = true;
   clearInterval(state.timer);
-  if (!gameOverEl || !gameOverInfo) return;
-  const now = Date.now();
-  const waitMs = Math.max(0, LIFE_REGEN_MS - (now - (state.lastLifeRegen || now)));
-  const waitMin = Math.ceil(waitMs / 60000);
-  gameOverInfo.innerHTML = state.coins >= REFILL_COST
-    ? `Te quedaste sin vidas 💔<br>Recarga con <b>${REFILL_COST} 🪙</b> (tienes ${state.coins}) o espera <b>~${waitMin} min</b> para un corazón.`
-    : `Te quedaste sin vidas 💔<br>Necesitas ${REFILL_COST} 🪙 para recargar (tienes ${state.coins}).<br>Un corazón llegará en <b>~${waitMin} min</b>.`;
-  gameOverEl.classList.remove('hidden');
+  showGameOverScreen();
+}
+
+function startPractice() {
+  state.practiceMode = true;
+  if (gameOverEl) gameOverEl.classList.add('hidden');
+  showPWFeedback('🎮 ¡Modo práctica! No ganarás monedas', 'info');
+  resetGame({ keepLevel: true });
 }
 
 function refillLives() {
@@ -297,6 +300,7 @@ function refillLives() {
   spendCoins(REFILL_COST);
   state.lives = state.livesMax;
   state.lastLifeRegen = Date.now();
+  state.practiceMode = false;
   state.finished = false;
   updateLivesUI();
   if (gameOverEl) gameOverEl.classList.add('hidden');
@@ -903,19 +907,22 @@ function win() {
 
   const stars = starsFor(state.moves);
 
-  // 🏅 Registro de logros para insignias
-  if (stars === 3) state.threeStarLevels += 1;
-  if (state.failedPairs === 0) state.perfectLevels += 1;
-  if (isLast) state.allLevelsDone = true;
+  // 🏅 Registro de logros para insignias (no en modo práctica)
+  if (!state.practiceMode) {
+    if (stars === 3) state.threeStarLevels += 1;
+    if (state.failedPairs === 0) state.perfectLevels += 1;
+    if (isLast) state.allLevelsDone = true;
+  }
 
-  // Monedas por nivel completado
+  // Monedas por nivel completado (no en modo práctica)
   const coinReward = (stars * 5) + (state.level + 1) * 3;
-  addCoins(coinReward);
+  if (!state.practiceMode) addCoins(coinReward);
 
   winStars.textContent = '⭐'.repeat(stars);
   winTitle.textContent = isLast ? '🏆 ¡Completaste todos los niveles!' : `🎉 ¡Nivel ${state.level + 1} completo!`;
-  winInfo.textContent =
-    `Temática: ${THEMES[state.theme].label} · ${state.moves} movimientos en ${state.seconds} segundos. ¡+${coinReward} 🪙 monedas!`;
+  winInfo.textContent = state.practiceMode
+    ? `🎮 Modo práctica · ${state.moves} movimientos en ${state.seconds} segundos. ¡Sin monedas esta vez!`
+    : `Temática: ${THEMES[state.theme].label} · ${state.moves} movimientos en ${state.seconds} segundos. ¡+${coinReward} 🪙 monedas!`;
   nextLevelBtn.classList.toggle('hidden', isLast);
   playAgainBtn.textContent = isLast ? '🔄 Jugar de nuevo' : '🔁 Repetir nivel';
 
@@ -962,11 +969,38 @@ function resetGame(opts = {}) {
   updateStats();
   winOverlay.classList.add('hidden');
   confettiLayer.innerHTML = '';
+
+  // Si no hay vidas, mostrar game over directamente sin renderizar tablero
+  if (state.lives <= 0) {
+    showGameOverScreen();
+    updatePowerupUI();
+    return;
+  }
+
   buildDeck();
   renderBoard();
   updatePowerupUI();
-  // Si no hay vidas, mostrar game over (pero solo si no estaba ya en game over)
-  if (state.lives <= 0 && !state.finished) setTimeout(gameOver, 400);
+}
+
+function showGameOverScreen() {
+  if (!gameOverEl || !gameOverInfo) return;
+  const now = Date.now();
+  const waitMs = Math.max(0, LIFE_REGEN_MS - (now - (state.lastLifeRegen || now)));
+  const waitMin = Math.ceil(waitMs / 60000);
+  
+  state.finished = true;
+  
+  if (state.coins >= REFILL_COST) {
+    gameOverInfo.innerHTML = `Te quedaste sin vidas 💔<br>Recarga con <b>${REFILL_COST} 🪙</b> (tienes ${state.coins}) o espera <b>~${waitMin} min</b> para un corazón.`;
+    refillLivesBtn.disabled = false;
+    refillLivesBtn.classList.remove('no-funds');
+  } else {
+    gameOverInfo.innerHTML = `Te quedaste sin vidas 💔<br>Necesitas ${REFILL_COST} 🪙 para recargar (tienes ${state.coins}).<br>Un corazón llegará en <b>~${waitMin} min</b>.`;
+    refillLivesBtn.disabled = true;
+    refillLivesBtn.classList.add('no-funds');
+  }
+  
+  gameOverEl.classList.remove('hidden');
 }
 
 function updateStats() {
@@ -1037,6 +1071,7 @@ if (voiceBtn) voiceBtn.addEventListener('click', toggleVoice);
 // Vidas
 if (refillLivesBtn) refillLivesBtn.addEventListener('click', refillLives);
 if (waitGameOverBtn) waitGameOverBtn.addEventListener('click', waitForHearts);
+if (practiceBtn) practiceBtn.addEventListener('click', startPractice);
 
 /* ===== ARRANQUE ===== */
 loadGame();
