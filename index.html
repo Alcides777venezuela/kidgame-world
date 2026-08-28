@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Juego de memoria para niños — KidGame World. ¡Encuentra todas las parejas!">
-  <title>🎈 KidGame World — Juego de Memoria</title>
+  <meta name="description" content="Juego de memoria para niños — KidGame World. ¡Gana monedas, desbloquea avatares y power-ups!">
+  <title>🎈 KidGame World v2.0 — ¡Colecciona, Juega y Gana!</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -14,12 +14,43 @@
       <p class="sub">¡Encuentra todas las parejas, Campeón!</p>
     </header>
 
+    <!-- ===== BARRA SUPERIOR: Avatar + Monedas + Racha + Tienda ===== -->
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <div id="avatarDisplay" class="avatar-display" title="¡Elige tu avatar!" role="button" tabindex="0">🧒</div>
+      </div>
+      <div class="top-bar-center">
+        <span id="coinsCount" class="coins-display">🪙 0</span>
+        <span id="streakCount" class="streak-display">⭐ 0 días</span>
+      </div>
+      <button id="shopBtn" class="shop-btn">🏪 Tienda</button>
+    </div>
+
     <div class="theme-picker" id="themePicker" aria-label="Elige una temática">
       <button class="theme-btn active" data-theme="animales">🐾 Animales</button>
       <button class="theme-btn" data-theme="frutas">🍎 Frutas</button>
       <button class="theme-btn" data-theme="numeros">🔢 Números</button>
       <button class="theme-btn" data-theme="letras">🔤 Letras</button>
     </div>
+
+    <!-- ===== BARRA DE POWER-UPS ===== -->
+    <div id="powerupBar" class="powerup-bar">
+      <button id="pwMagnifier" class="pw-btn" title="Revela todas las cartas por 1.5s">
+        <span class="pw-icon">🔍</span> Lupa
+        <span id="pwMagnifierCount" class="pw-count">0</span>
+      </button>
+      <button id="pwPause" class="pw-btn" title="Congela el tiempo 10s">
+        <span class="pw-icon">⏸️</span> Pausa
+        <span id="pwPauseCount" class="pw-count">0</span>
+      </button>
+      <button id="pwWildcard" class="pw-btn" title="Encuentra la pareja automáticamente">
+        <span class="pw-icon">❌</span> Comodín
+        <span id="pwWildcardCount" class="pw-count">0</span>
+      </button>
+    </div>
+
+    <!-- ===== FEEDBACK DE POWER-UPS ===== -->
+    <div id="pwFeedback" class="pw-feedback hidden"></div>
 
     <div class="panel">
       <div class="stat"><span class="label">⭐ Nivel</span><span id="level" class="value">1 / 3</span></div>
@@ -30,6 +61,26 @@
     </div>
 
     <div id="board" class="board cols-4"></div>
+  </div>
+
+  <!-- ===== MODAL: AVATARES ===== -->
+  <div id="avatarPicker" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-title">👤 Elige tu Avatar</div>
+      <div class="modal-sub">¡Desbloquea más avatares jugando!</div>
+      <div id="avatarGrid" class="avatar-grid"></div>
+      <button id="avatarClose" class="modal-close">✅ Listo</button>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: TIENDA ===== -->
+  <div id="shopModal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-title">🏪 Tienda KidGame</div>
+      <div class="modal-sub">Gasta tus 🪙 monedas en power-ups y temas</div>
+      <div id="shopItems" class="shop-items"></div>
+      <button id="shopClose" class="modal-close">✅ Cerrar tienda</button>
+    </div>
   </div>
 
   <div id="confetti-layer" class="confetti-layer" aria-hidden="true"></div>

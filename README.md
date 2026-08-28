@@ -1,62 +1,85 @@
-# 🎈 KidGame World — Juego de Memoria
+# 🎈 KidGame World v2.0 — ¡Monedas, Rachas, Avatares y Power-ups!
 
-¡Bienvenido al **Juego de Memoria** de KidGame World! Un juego colorido para niños donde deben encontrar todas las parejas: 🐶 🐱 🦊 🐸 🐼 🐵
+**Un juego de memoria para niños de 5-8 años. ¡Encuentra parejas, gana monedas y desbloquea todo!**
+
+> 🌐 **Jugalo ahora:** [kidgame-world.netlify.app](https://kidgame-world.netlify.app)
+
+---
 
 ## ✨ Características
 
-- 🎮 **3 niveles de dificultad**:
-  - **Nivel 1 — Principiante**: 6 parejas (tablero 4×3)
-  - **Nivel 2 — Explorador**: 8 parejas (tablero 4×4)
-  - **Nivel 3 — Maestro**: 12 parejas (tablero 6×4)
+### 🧠 Juego Base
+- 🎮 **3 niveles de dificultad**: Principiante (6 pares), Explorador (8 pares), Maestro (12 pares)
 - 🎨 **4 temáticas**: 🐾 Animales, 🍎 Frutas, 🔢 Números y 🔤 Letras
 - 🧠 Animación de volteo 3D en todas las cartas
 - 🔊 Sonidos divertidos (Web Audio, sin archivos externos)
-- ⭐ Sistema de estrellas según los movimientos:
-  - **3 estrellas**: 10 movimientos o menos
-  - **2 estrellas**: hasta 14 movimientos
-  - **1 estrella**: más de 14
+- ⭐ **Sistema de estrellas** según movimientos: 3⭐ (≤10), 2⭐ (≤14), 1⭐ (>14)
 - ⏱️ Temporizador y contador de movimientos
 - 🎉 Celebración con confeti al ganar cada nivel
 - 📱 Diseño responsivo (celulares, tablets y PC)
 - 🌎 Todo en español, pensado para niños
 
+### 🆕 NUEVO en v2.0
+
+| Característica | Descripción |
+|---------------|-------------|
+| 🪙 **Monedas** | Gana monedas por cada nivel completado (más estrellas = más monedas) |
+| 🔥 **Rachas diarias** | Juega días seguidos para mantener tu racha — ¡30 días = Legendario! |
+| 👤 **Avatares** | 10 avatares desbloqueables: 🧒 👧 🧑‍🚀 🦸 🧙‍♂️ 🐉 🧜‍♀️ 🤖 👸 🏴‍☠️ |
+| 🏪 **Tienda** | Gasta monedas en power-ups y más |
+| ⚡ **Power-ups** | 🔍 Lupa (revela cartas), ⏸️ Pausa (congela tiempo), ❌ Comodín (encuentra pareja) |
+| 💾 **Progreso persistente** | Todo se guarda en tu navegador (localStorage) |
+
+---
+
 ## 🚀 Cómo ejecutar
 
 ### Localmente
-
 ```bash
-npm install   # genera package-lock.json (sin dependencias externas)
+npm install
 npm start
 ```
 
-Luego abre tu navegador en [http://localhost:3000](http://localhost:3000).
+Luego abre [http://localhost:3000](http://localhost:3000).
 
 También puedes abrir `index.html` directamente en el navegador sin servidor.
 
-### En Azure (automático)
+### En línea (Netlify)
+El proyecto está deployado automáticamente vía Netlify. Cada push a `main` se despliega en:
+👉 **[https://kidgame-world.netlify.app](https://kidgame-world.netlify.app)**
 
-El repositorio incluye un workflow de GitHub Actions (`.github/workflows/azure-webapps-node.yml`) que despliega automáticamente a Azure Web App cuando haces push a `main`. Requisitos:
-
-1. Crear la Web App en Azure (Node.js 20, Linux).
-2. En el repositorio: **Settings → Secrets and variables → Actions**, crear el secreto `AZURE_WEBAPP_PUBLISH_PROFILE` con el contenido del Publish Profile de tu Web App.
-3. Confirmar que `AZURE_WEBAPP_NAME` en el workflow coincide con el nombre de tu Web App.
-4. El `package-lock.json` ya está incluido (lo requiere el workflow para el caché de npm).
+---
 
 ## 📂 Estructura
 
 ```
 kidgame-world/
-├── index.html      # Página del juego
-├── styles.css      # Estilos y animaciones
-├── game.js         # Lógica del juego (niveles y temáticas)
-├── server.js       # Servidor estático (sin dependencias)
+├── index.html      # Página del juego (estructura completa)
+├── styles.css      # Estilos y animaciones (v2.0)
+├── game.js         # Lógica del juego (monedas, rachas, avatares, power-ups, tienda)
+├── server.js       # Servidor estático (sin dependencias externas)
 ├── package.json    # Configuración Node.js
-└── package-lock.json  # Bloqueo de dependencias (para el workflow)
+├── package-lock.json
+└── .netlify/       # Configuración de deploy Netlify
 ```
 
-## 🛠️ Próximas ideas
+---
 
-- Más niveles (6×6 cartas) y más temáticas (vehículos, planetas, emojis)
-- Modo de 2 jugadores
-- Tabla de récords
-- Modo contrarreloj
+## 🎯 Próximas ideas (v3.0)
+
+- 🌌 Temáticas desbloqueables (Espacial, Dinosaurios, Marina)
+- 🏆 Tabla de récords local (mejores tiempos por nivel)
+- 🤝 Modo 2 jugadores (turnos en el mismo dispositivo)
+- ⏱️ Modo contrarreloj
+- 🔔 Recordatorio diario para mantener rachas
+- 🗺️ Mapa de progreso visual
+
+---
+
+## 🛠️ Tecnologías
+
+- **HTML5 + CSS3** con animaciones 3D y diseño responsivo
+- **JavaScript vanilla** (ES6+) — sin frameworks ni dependencias
+- **Web Audio API** — sonidos generados proceduralmente
+- **localStorage** — persistencia de progreso
+- **Netlify** — hosting con deploy automático desde GitHub
