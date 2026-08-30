@@ -601,11 +601,24 @@ function updateEggUI() {
 }
 
 /* ===== MONEDAS ===== */
+function spawnFloatReward(text) {
+  if (!coinsEl) return;
+  const el = document.createElement('div');
+  el.className = 'float-reward';
+  el.textContent = text;
+  const r = coinsEl.getBoundingClientRect();
+  el.style.left = (r.left + r.width / 2 - 35) + 'px';
+  el.style.top = (r.top - 8) + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1500);
+}
+
 function addCoins(amount) {
   state.coins += amount;
   state.totalCoinsEarned += amount;
   soundCoin();
   updateCoinsUI();
+  spawnFloatReward('+' + amount + ' 🪙');
   saveGame();
 }
 
@@ -878,6 +891,7 @@ function renderBoard() {
         <div class="face back"></div>
         <div class="face front${txtClass}"${color}>${card.emoji}</div>
       </div>`;
+    el.style.animationDelay = (i * 45) + 'ms';
     el.addEventListener('click', () => onCardClick(el, card));
     board.appendChild(el);
   });
