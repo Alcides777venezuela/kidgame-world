@@ -140,6 +140,7 @@ const exitPracticeBtn = document.getElementById('exitPractice');
 const musicBtn = document.getElementById('musicBtn');
 const tutorialEl = document.getElementById('tutorial');
 const tutorialStartBtn = document.getElementById('tutorialStart');
+const speechBubble = document.getElementById('speechBubble');
 // 🥚 Huevo Mágico refs
 const eggDisplay = document.getElementById('eggDisplay');
 const petDisplay = document.getElementById('petDisplay');
@@ -424,6 +425,34 @@ function loadGame() {
   } catch (e) { /* ignorar */ }
 }
 
+/* ===== DIÁLOGO DE LA MASCOTA 🐤 (estilo YarnSpinner) ===== */
+// Líneas de diálogo condicionadas por evento, como nodos de Yarn
+const PET_LINES = {
+  greeting: ['¡Hola, campeón! ¡Vamos a jugar!', '¡Qué bueno verte otra vez!', '¡Yo te cuido, confía en mí!'],
+  streak: ['¡Racha encendida! ¡Eres una estrella! 🔥', '¡Imparable! ¡Sigue así! 🏆', '¡Tu constancia da frutos! ⭐'],
+  levelUp: ['¡Nivel completado! ¡Eres genial! 🎉', '¡Qué nivelón! ¡Bravo! 👏', '¡Cada vez más fuerte! 💪'],
+  hatch: ['¡Soy tu mascota! ¡Nací gracias a ti! 🎉', '¡Al fin salí del huevo! ¡Vamos a jugar!', '¡Gracias por cuidar mi huevo!'],
+  gameOver: ['¡Ánimo! ¡Lo intentamos otra vez!', '¡Todos fallamos alguna vez! Tú puedes', '¡Respira y vuelve a intentarlo!']
+};
+
+function petSay(eventKey, opts = {}) {
+  if (!state.petType) return; // sin mascota no hay diálogo
+  const lines = PET_LINES[eventKey];
+  if (!lines || !speechBubble) return;
+  const line = lines[Math.floor(Math.random() * lines.length)];
+  const show = () => {
+    speechBubble.textContent = `${state.petType} ${line}`;
+    speechBubble.classList.remove('hidden');
+    speechBubble.classList.remove('bubble-pop');
+    void speechBubble.offsetWidth;
+    speechBubble.classList.add('bubble-pop');
+    clearTimeout(speechBubble._t);
+    speechBubble._t = setTimeout(() => speechBubble.classList.add('hidden'), 4200);
+  };
+  if (opts.delay) setTimeout(show, opts.delay); else show();
+  if (opts.speak !== false) speak(line);
+}
+
 /* ===== MÚSICA DE FONDO 🎵 — "Marcha del Campeón" (original) ===== */
 // Composición original en Do mayor · progresión C - G - Am - F
 const SONG = {
@@ -604,6 +633,7 @@ function updateStreak() {
   updateStreakUI();
   saveGame();
   checkBadges();
+  if ([3, 5, 7, 14, 30].includes(state.streak)) petSay('streak');
 }
 
 function getStreakEmoji() {
@@ -695,6 +725,7 @@ function hatchEgg() {
   // Sonido especial
   soundWin();
   setTimeout(() => speak('¡Tu mascota ha nacido! 🎉 Cuídala mucho'), 500);
+  petSay('hatch', { speak: false, delay: 1700 });
 
   // Mostrar notificación
   setTimeout(() => {
@@ -1164,6 +1195,7 @@ function win() {
   }, 600);
 
   checkBadges();
+  petSay('levelUp');
 }
 
 /* ===== CONFETI ===== */
@@ -1221,6 +1253,8 @@ function showGameOverScreen() {
   const waitMin = Math.ceil(waitMs / 60000);
   
   state.finished = true;
+  
+  petSay('gameOver');
   
   const practiceLink = `<br>🎮 O juega en <b>modo práctica</b> sin ganar monedas.`;
   
@@ -1338,4 +1372,5 @@ renderBadges();
 updateBadgeUI();
 syncPracticeBanner();
 applyScene();
+petSay('greeting');
 resetGame();
