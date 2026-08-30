@@ -269,7 +269,7 @@ function regenHearts() {
   const elapsed = now - base;
   const gained = Math.floor(elapsed / LIFE_REGEN_MS);
   if (gained > 0) {
-    state.lives = Math.min(state.livesMax, state.lives + gained);
+    state.lives = state.livesMax; // recarga completa en ~3 min
     state.lastLifeRegen = state.lives >= state.livesMax ? now : base + gained * LIFE_REGEN_MS;
     if (state.lives > 0 && state.practiceMode) {
       state.practiceMode = false;
@@ -352,7 +352,7 @@ function refillLives() {
 
 function waitForHearts() {
   if (gameOverEl) gameOverEl.classList.add('hidden');
-  showPWFeedback('⏳ Corazón gratis en ~3 min. ¡Vuelve pronto!', 'info');
+  showPWFeedback('⏳ Tus 7 vidas volverán en ~3 min. ¡Vuelve pronto!', 'info');
 }
 
 /* ===== GUARDAR / CARGAR (localStorage) ===== */
@@ -1048,11 +1048,11 @@ function showGameOverScreen() {
   const practiceLink = `<br>🎮 O juega en <b>modo práctica</b> sin ganar monedas.`;
   
   if (state.coins >= REFILL_COST) {
-    gameOverInfo.innerHTML = `Te quedaste sin vidas 💔<br>Recarga con <b>${REFILL_COST} 🪙</b> (tienes ${state.coins}) o espera <b>~${waitMin} min</b> para un corazón.${practiceLink}`;
+    gameOverInfo.innerHTML = `Te quedaste sin vidas 💔<br>Recarga con <b>${REFILL_COST} 🪙</b> (tienes ${state.coins}) o espera <b>~${waitMin} min</b> para recuperar TODAS tus vidas.${practiceLink}`;
     refillLivesBtn.disabled = false;
     refillLivesBtn.classList.remove('no-funds');
   } else {
-    gameOverInfo.innerHTML = `Te quedaste sin vidas 💔<br>Necesitas ${REFILL_COST} 🪙 para recargar (tienes ${state.coins}).<br>Un corazón llegará en <b>~${waitMin} min</b>.${practiceLink}`;
+    gameOverInfo.innerHTML = `Te quedaste sin vidas 💔<br>Necesitas ${REFILL_COST} 🪙 para recargar (tienes ${state.coins}).<br>Tus vidas volverán en <b>~${waitMin} min</b>.${practiceLink}`;
     refillLivesBtn.disabled = true;
     refillLivesBtn.classList.add('no-funds');
   }
