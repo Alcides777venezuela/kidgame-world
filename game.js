@@ -259,7 +259,13 @@ function updateLivesUI() {
 function regenHearts() {
   if (state.lives >= state.livesMax) return;
   const now = Date.now();
-  const base = state.lastLifeRegen || now;
+  // Si el reloj nunca arrancó (0), iniciarlo ahora (persistido)
+  if (!state.lastLifeRegen) {
+    state.lastLifeRegen = now;
+    saveGame();
+    return;
+  }
+  const base = state.lastLifeRegen;
   const elapsed = now - base;
   const gained = Math.floor(elapsed / LIFE_REGEN_MS);
   if (gained > 0) {
@@ -273,11 +279,19 @@ function regenHearts() {
       saveGame();
     }
     updateLivesUI();
+    // Si el modal de game over está abierto y ya hay corazones: ¡a jugar!
+    if (state.lives > 0 && gameOverEl && !gameOverEl.classList.contains('hidden')) {
+      gameOverEl.classList.add('hidden');
+      resetGame({ keepLevel: true });
+    }
   }
 }
 
 function loseLife() {
   if (state.lives <= 0) return;
+  if (state.lives >= state.livesMax) {
+    state.lastLifeRegen = Date.now(); // el reloj arranca al perder la primera vida
+  }
   state.lives -= 1;
   updateLivesUI();
   saveGame();
@@ -338,7 +352,7 @@ function refillLives() {
 
 function waitForHearts() {
   if (gameOverEl) gameOverEl.classList.add('hidden');
-  showPWFeedback('⏳ Corazón gratis en ~30 min. ¡Vuelve pronto!', 'info');
+  showPWFeedback('⏳ Corazón gratis en ~3 min. ¡Vuelve pronto!', 'info');
 }
 
 /* ===== GUARDAR / CARGAR (localStorage) ===== */
