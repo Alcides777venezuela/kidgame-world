@@ -1,4 +1,4 @@
-/* ===== KidGame World v2.0 — Monedas, Rachas, Avatares, Power-ups ===== */
+/* ===== KidGame World v2.11 — Diálogo con opciones (Yarn) + juice de combos ===== */
 @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&display=swap');
 
 * {
@@ -357,6 +357,39 @@ body {
   from { opacity: 0; transform: translateX(-50%) translateY(8px) scale(0.9); }
   to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
 }
+
+/* Burbuja interactiva con opciones (branching estilo Yarn) */
+.speech-bubble.interactive {
+  pointer-events: auto;
+  max-width: 320px;
+}
+
+.bubble-line {
+  margin-bottom: 8px;
+}
+
+.bubble-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bubble-opt {
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #4a2c00;
+  background: linear-gradient(180deg, var(--gold), #ffc400);
+  border: none;
+  border-radius: 999px;
+  padding: 7px 12px;
+  cursor: pointer;
+  box-shadow: 0 3px 0 #c79a00;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.bubble-opt:hover { transform: translateY(-1px); }
+.bubble-opt:active { transform: translateY(1px); box-shadow: 0 1px 0 #c79a00; }
 
 /* Banner modo práctica */
 .practice-banner {
@@ -991,6 +1024,22 @@ body[data-scene="tema-dinosaurio"]::before {
 @keyframes fall {
   0% { transform: translateY(0) rotate(0deg); opacity: 1; }
   100% { transform: translateY(110vh) rotate(720deg); opacity: 0.85; }
+}
+
+/* Confeti pequeño de combos (juice) */
+.burst-piece {
+  position: fixed;
+  z-index: 76;
+  width: 8px;
+  height: 12px;
+  border-radius: 2px;
+  pointer-events: none;
+  animation: burstFly ease-out forwards;
+}
+
+@keyframes burstFly {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+  100% { opacity: 0; transform: translate(var(--bx), var(--by)) rotate(360deg) scale(0.3); }
 }
 
 /* ===== Pantalla de victoria ===== */

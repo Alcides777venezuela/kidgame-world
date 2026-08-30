@@ -1,5 +1,5 @@
 /* ===== KidGame World — Service Worker (PWA offline) ===== */
-const CACHE = 'kidgame-world-v2.6';
+const CACHE = 'kidgame-world-v2.11';
 
 self.addEventListener('install', (e) => {
   e.waitUntil(

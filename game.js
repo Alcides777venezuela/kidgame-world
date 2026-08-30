@@ -1,4 +1,4 @@
-/* ===== KidGame World v2.0 — Monedas, Rachas, Avatares, Power-ups ===== */
+/* ===== KidGame World v2.11 — Diálogo con opciones (Yarn) + juice de combos ===== */
 
 /* ===== CONSTANTES ===== */
 const THEMES = {
@@ -442,6 +442,7 @@ function petSay(eventKey, opts = {}) {
   const line = lines[Math.floor(Math.random() * lines.length)];
   const show = () => {
     speechBubble.textContent = `${state.petType} ${line}`;
+    speechBubble.classList.remove('interactive');
     speechBubble.classList.remove('hidden');
     speechBubble.classList.remove('bubble-pop');
     void speechBubble.offsetWidth;
@@ -451,6 +452,111 @@ function petSay(eventKey, opts = {}) {
   };
   if (opts.delay) setTimeout(show, opts.delay); else show();
   if (opts.speak !== false) speak(line);
+}
+
+/* ===== DIÁLOGO CON OPCIONES 🐤 (branching estilo YarnSpinner) ===== */
+// Como en Yarn: un nodo "menu" muestra opciones ("-> opción") y cada opción
+// salta a otro nodo ("<<jump>>"). back:true = volver al menú, back:false = cerrar.
+const PET_JOKES = [
+  '¿Qué le dice un semáforo a otro? ¡No me mires, que me estoy cambiando! 😂',
+  '¿Por qué no pelea el libro de matemáticas? ¡Porque tiene muchos problemas! 😂',
+  '¿Qué hace una abeja en el gimnasio? ¡Zum-ba! 🐝',
+  '¿Cómo se despide un dinosaurio? ¡Hasta la vista! 🦖',
+  '¿Qué le dijo el 0 al 8? ¡Bonito cinturón! 😂',
+  '¿Qué le dice una uva verde a una morada? ¡Respira, respira! 🍇'
+];
+
+const PET_CHEERS = [
+  '¡Tú eres un campeón, yo lo sé! 💪🌟',
+  '¡Cada partida te hace más fuerte! 🚀',
+  '¡No importa cuántas veces caigas, levántate siempre! ⭐',
+  '¡Confía en ti: tu memoria es increíble! 🧠💛'
+];
+
+const PET_DIALOGUES = {
+  menu: {
+    text: '¡Hola, campeón! ¿Qué hacemos hoy?',
+    options: [
+      { label: '🎮 ¡Jugamos!', next: 'play' },
+      { label: '😂 Cuéntame un chiste', next: 'joke' },
+      { label: '💪 Anímame', next: 'cheer' },
+      { label: '👋 ¡Adiós!', next: 'bye' }
+    ]
+  },
+  play: { text: '¡Genial! Toca dos cartas para encontrar las parejas. ¡Tú puedes! 🃏✨', back: true },
+  joke: { text: () => PET_JOKES[Math.floor(Math.random() * PET_JOKES.length)], back: true },
+  cheer: { text: () => PET_CHEERS[Math.floor(Math.random() * PET_CHEERS.length)], back: true },
+  bye: { text: '¡Hasta luego, campeón! ¡Cuida tu racha y vuelve pronto! 👋🌟', back: false }
+};
+
+function showPetBubble() {
+  speechBubble.classList.remove('hidden');
+  speechBubble.classList.remove('bubble-pop');
+  void speechBubble.offsetWidth;
+  speechBubble.classList.add('bubble-pop');
+}
+
+function hidePetBubble() {
+  clearTimeout(speechBubble._t);
+  speechBubble.classList.remove('interactive');
+  speechBubble.classList.add('hidden');
+  speechBubble.innerHTML = '';
+}
+
+function petDialogue(nodeKey) {
+  if (!state.petType || !speechBubble) return;
+  const node = PET_DIALOGUES[nodeKey];
+  if (!node) return;
+  clearTimeout(speechBubble._t);
+  const text = typeof node.text === 'function' ? node.text() : node.text;
+  speechBubble.innerHTML = '';
+  speechBubble.classList.remove('interactive');
+
+  const lineEl = document.createElement('div');
+  lineEl.className = 'bubble-line';
+  lineEl.textContent = `${state.petType} ${text}`;
+  speechBubble.appendChild(lineEl);
+
+  if (node.options) {
+    // Nodo menú: mostrar botones de opciones (ramificación estilo Yarn)
+    const opts = document.createElement('div');
+    opts.className = 'bubble-options';
+    node.options.forEach(opt => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'bubble-opt';
+      b.textContent = opt.label;
+      b.addEventListener('click', () => {
+        if (opt.next) petDialogue(opt.next);
+        else hidePetBubble();
+      });
+      opts.appendChild(b);
+    });
+    speechBubble.appendChild(opts);
+    speechBubble.classList.add('interactive');
+    showPetBubble();
+    speak(text);
+  } else {
+    // Nodo respuesta: mostrar la línea y volver al menú o cerrar
+    showPetBubble();
+    speak(text);
+    speechBubble._t = setTimeout(() => {
+      if (node.back) petDialogue('menu');
+      else hidePetBubble();
+    }, 3000);
+  }
+}
+
+// Clic en la mascota: abre el menú de opciones (o lo cierra si está abierto)
+if (petDisplay) {
+  petDisplay.addEventListener('click', () => {
+    if (!state.petType || !speechBubble) return;
+    if (!speechBubble.classList.contains('hidden')) {
+      hidePetBubble();
+    } else {
+      petDialogue('menu');
+    }
+  });
 }
 
 /* ===== MÚSICA DE FONDO 🎵 — "Marcha del Campeón" (original) ===== */
@@ -550,14 +656,17 @@ function checkCombo() {
     addCoins(5);
     showPWFeedback('🔥 ¡Combo x2! +5 🪙', 'success');
     soundStreak();
+    comboConfetti();
   } else if (state.combo === 5) {
     addCoins(10);
     showPWFeedback('⚡ ¡Combo x3! +10 🪙', 'success');
     soundStreak();
+    comboConfetti();
   } else if (state.combo === 8) {
     addCoins(15);
     showPWFeedback('🌟 ¡Combo x4! +15 🪙', 'success');
     soundStreak();
+    comboConfetti();
   }
 }
 
@@ -1215,6 +1324,30 @@ function launchConfetti() {
     confettiLayer.appendChild(piece);
   }
   setTimeout(() => { confettiLayer.innerHTML = ''; }, 6000);
+}
+
+/* ===== CONFETI DE COMBO 🎊 (juice: feedback visual en rachas de aciertos) ===== */
+function burstConfetti(x, y, count = 26) {
+  const colors = ['#ffd93d', '#ff6a88', '#7ce495', '#6ea8fe', '#c77dff', '#ff9a56'];
+  for (let i = 0; i < count; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'burst-piece';
+    piece.style.left = x + 'px';
+    piece.style.top = y + 'px';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 40 + Math.random() * 90;
+    piece.style.setProperty('--bx', Math.cos(angle) * dist + 'px');
+    piece.style.setProperty('--by', Math.sin(angle) * dist - 30 + 'px');
+    piece.style.animationDuration = `${0.6 + Math.random() * 0.6}s`;
+    document.body.appendChild(piece);
+    setTimeout(() => piece.remove(), 1500);
+  }
+}
+
+function comboConfetti() {
+  const r = board.getBoundingClientRect();
+  burstConfetti(r.left + r.width / 2, r.top + r.height / 2, 26);
 }
 
 /* ===== REINICIAR ===== */

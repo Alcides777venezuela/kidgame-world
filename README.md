@@ -1,4 +1,4 @@
-# 🎈 KidGame World v2.0 — ¡Monedas, Rachas, Avatares y Power-ups!
+# 🎈 KidGame World v2.11 — ¡Monedas, Rachas, Avatares y Power-ups!
 
 **Un juego de memoria para niños de 5-8 años. ¡Encuentra parejas, gana monedas y desbloquea todo!**
 
@@ -30,6 +30,13 @@
 | ⚡ **Power-ups** | 🔍 Lupa (revela cartas), ⏸️ Pausa (congela tiempo), ❌ Comodín (encuentra pareja) |
 | 💾 **Progreso persistente** | Todo se guarda en tu navegador (localStorage) |
 
+### 🆕 NUEVO en v2.11
+
+| Característica | Descripción |
+|---------------|-------------|
+| 💬 **Diálogo con opciones** | Toca a tu mascota y elige entre opciones (¡Jugamos!, un chiste, ánimo, despedida) — branching estilo YarnSpinner |
+| 🎊 **Confeti de combos** | Explosión de confeti al alcanzar combos x2, x3 y x4 |
+
 ---
 
 ## 🚀 Cómo ejecutar
@@ -55,8 +62,8 @@ El proyecto está deployado automáticamente vía Netlify. Cada push a `main` se
 ```
 kidgame-world/
 ├── index.html      # Página del juego (estructura completa)
-├── styles.css      # Estilos y animaciones (v2.0)
-├── game.js         # Lógica del juego (monedas, rachas, avatares, power-ups, tienda)
+├── styles.css      # Estilos y animaciones (v2.11)
+├── game.js         # Lógica del juego (monedas, rachas, avatares, power-ups, tienda, diálogo)
 ├── server.js       # Servidor estático (sin dependencias externas)
 ├── package.json    # Configuración Node.js
 ├── package-lock.json
