@@ -778,7 +778,11 @@ function useMagnifier() {
     showPWFeedback('🪙 ¡No tienes Lupa! Cómprala en la tienda', 'error');
     return;
   }
-  if (state.lock || state.finished) return;
+  if (state.finished) return;
+  if (state.lock) {
+    showPWFeedback('⏳ ¡Espera un segundo!', 'error');
+    return;
+  }
   state.powerups.magnifier -= 1;
   state.lock = true;
 
@@ -801,7 +805,10 @@ function usePause() {
     return;
   }
   if (state.finished) return;
-  if (!state.started) return;
+  if (!state.started) {
+    showPWFeedback('👆 ¡Toca una carta para empezar!', 'error');
+    return;
+  }
   state.powerups.pause -= 1;
   state.powerupActive = true;
 
@@ -825,7 +832,11 @@ function useWildcard() {
     showPWFeedback('🪙 ¡No tienes Comodín! Cómpralo en la tienda', 'error');
     return;
   }
-  if (state.lock || state.finished) return;
+  if (state.finished) return;
+  if (state.lock) {
+    showPWFeedback('⏳ ¡Espera a que terminen las cartas!', 'error');
+    return;
+  }
   if (state.flipped.length === 0) {
     showPWFeedback('❌ Voltea una carta primero', 'error');
     return;
