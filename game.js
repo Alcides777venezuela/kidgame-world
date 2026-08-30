@@ -970,8 +970,8 @@ function resetGame(opts = {}) {
   winOverlay.classList.add('hidden');
   confettiLayer.innerHTML = '';
 
-  // Si no hay vidas, mostrar game over directamente sin renderizar tablero
-  if (state.lives <= 0) {
+  // Si no hay vidas, mostrar game over directamente (excepto en modo práctica)
+  if (state.lives <= 0 && !state.practiceMode) {
     showGameOverScreen();
     updatePowerupUI();
     return;
