@@ -424,21 +424,60 @@ function loadGame() {
   } catch (e) { /* ignorar */ }
 }
 
-/* ===== MÚSICA DE FONDO 🎵 ===== */
-const MELODY = [523, 659, 784, 659, 523, 587, 698, 880, 784, 659, 587, 523];
+/* ===== MÚSICA DE FONDO 🎵 — "Marcha del Campeón" (original) ===== */
+// Composición original en Do mayor · progresión C - G - Am - F
+const SONG = {
+  stepMs: 260,
+  melody: [
+    // Barra 1 (C):  C5 E5 G5 E5  C5 E5 G5 E5
+    523, 659, 784, 659, 523, 659, 784, 659,
+    // Barra 2 (G):  B4 D5 G5 D5  B4 D5 G5 D5
+    494, 587, 784, 587, 494, 587, 784, 587,
+    // Barra 3 (Am): A4 C5 E5 C5  A4 C5 E5 C5
+    440, 523, 659, 523, 440, 523, 659, 523,
+    // Barra 4 (F):  F4 A4 C5 A4  F4 A4 C5 A4
+    349, 440, 523, 440, 349, 440, 523, 440,
+    // Gancho final: C D E F G A G E
+    523, 587, 659, 698, 784, 880, 784, 659
+  ],
+  bass: [
+    131, null, 196, null, 131, null, 196, null,
+    98,  null, 147, null, 98,  null, 147, null,
+    110, null, 165, null, 110, null, 165, null,
+    87,  null, 131, null, 87,  null, 131, null,
+    131, null, 196, null, 98,  null, 87,  null
+  ]
+};
+
 let musicTimer = null;
 let musicStep = 0;
+let nextNoteTime = 0;
+
+function playMusicStep(step, t) {
+  const m = SONG.melody[step % SONG.melody.length];
+  const b = SONG.bass[step % SONG.bass.length];
+  const delay = t - audioCtx.currentTime;
+  if (m) {
+    tone(m, 0.22, 'triangle', 0.05, delay);        // melodía
+    tone(m * 2, 0.16, 'sine', 0.018, delay);        // brillo (octava arriba)
+  }
+  if (b) tone(b, 0.3, 'sine', 0.085, delay);        // bajo
+}
+
+function musicScheduler() {
+  while (nextNoteTime < audioCtx.currentTime + 0.25) {
+    playMusicStep(musicStep, nextNoteTime);
+    nextNoteTime += SONG.stepMs / 1000;
+    musicStep++;
+  }
+}
 
 function startMusic() {
   if (!state.musicEnabled || musicTimer) return;
   ensureAudio();
   musicStep = 0;
-  musicTimer = setInterval(() => {
-    const freq = MELODY[musicStep % MELODY.length];
-    tone(freq, 0.26, 'triangle', 0.055);
-    if (musicStep % 8 === 7) tone(freq / 2, 0.4, 'triangle', 0.05, 0.22);
-    musicStep++;
-  }, 330);
+  nextNoteTime = audioCtx.currentTime + 0.1;
+  musicTimer = setInterval(musicScheduler, 100); // lookahead scheduler: ritmo preciso
 }
 
 function stopMusic() {
