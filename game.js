@@ -1145,6 +1145,13 @@ if (waitGameOverBtn) waitGameOverBtn.addEventListener('click', waitForHearts);
 if (practiceBtn) practiceBtn.addEventListener('click', startPractice);
 if (exitPracticeBtn) exitPracticeBtn.addEventListener('click', exitPractice);
 
+/* ===== PWA: registrar service worker ===== */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+
 /* ===== ARRANQUE ===== */
 loadGame();
 updateCoinsUI();
