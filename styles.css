@@ -287,6 +287,40 @@ body {
   100% { opacity: 0; transform: translateY(-52px) scale(1); }
 }
 
+/* Partículas de acierto */
+.sparkle {
+  position: fixed;
+  z-index: 75;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: sparkleFly 0.7s ease-out forwards;
+}
+
+@keyframes sparkleFly {
+  0% { opacity: 1; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.3); }
+}
+
+/* Tutorial */
+.tutorial-card { text-align: center; }
+
+.tutorial-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 14px 0 18px;
+  text-align: left;
+}
+
+.tutorial-step {
+  background: rgba(102, 126, 234, 0.12);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 1rem;
+}
+
 /* Banner modo práctica */
 .practice-banner {
   position: fixed;

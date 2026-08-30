@@ -81,6 +81,9 @@ const state = {
   allLevelsDone: false,
   // 🎮 Modo práctica (jugar sin vidas, sin monedas)
   practiceMode: false,
+  // 🎵 Música y combos
+  musicEnabled: true,
+  combo: 0,
   // Nuevo: Temas comprados
   boughtThemes: [],
   activeTheme: 'default'
@@ -134,6 +137,9 @@ const waitGameOverBtn = document.getElementById('waitGameOver');
 const practiceBtn = document.getElementById('practiceBtn');
 const practiceBanner = document.getElementById('practiceBanner');
 const exitPracticeBtn = document.getElementById('exitPractice');
+const musicBtn = document.getElementById('musicBtn');
+const tutorialEl = document.getElementById('tutorial');
+const tutorialStartBtn = document.getElementById('tutorialStart');
 // 🥚 Huevo Mágico refs
 const eggDisplay = document.getElementById('eggDisplay');
 const petDisplay = document.getElementById('petDisplay');
@@ -380,7 +386,8 @@ function saveGame() {
     threeStarLevels: state.threeStarLevels,
     perfectLevels: state.perfectLevels,
     allLevelsDone: state.allLevelsDone,
-    practiceMode: state.practiceMode
+    practiceMode: state.practiceMode,
+    musicEnabled: state.musicEnabled
   };
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -413,7 +420,77 @@ function loadGame() {
     state.perfectLevels = data.perfectLevels || 0;
     state.allLevelsDone = data.allLevelsDone || false;
     state.practiceMode = data.practiceMode || false;
+    state.musicEnabled = data.musicEnabled !== false;
   } catch (e) { /* ignorar */ }
+}
+
+/* ===== MÚSICA DE FONDO 🎵 ===== */
+const MELODY = [523, 659, 784, 659, 523, 587, 698, 880, 784, 659, 587, 523];
+let musicTimer = null;
+let musicStep = 0;
+
+function startMusic() {
+  if (!state.musicEnabled || musicTimer) return;
+  ensureAudio();
+  musicStep = 0;
+  musicTimer = setInterval(() => {
+    const freq = MELODY[musicStep % MELODY.length];
+    tone(freq, 0.26, 'triangle', 0.055);
+    if (musicStep % 8 === 7) tone(freq / 2, 0.4, 'triangle', 0.05, 0.22);
+    musicStep++;
+  }, 330);
+}
+
+function stopMusic() {
+  clearInterval(musicTimer);
+  musicTimer = null;
+}
+
+function toggleMusic() {
+  state.musicEnabled = !state.musicEnabled;
+  saveGame();
+  syncMusicBtn();
+  if (state.musicEnabled) { ensureAudio(); startMusic(); } else { stopMusic(); }
+}
+
+function syncMusicBtn() {
+  if (!musicBtn) return;
+  musicBtn.textContent = state.musicEnabled ? '🎵' : '🔇';
+  musicBtn.classList.toggle('muted', !state.musicEnabled);
+}
+
+/* ===== PARTÍCULAS ✨ ===== */
+function spawnSparkles(x, y, color = '#ffd93d') {
+  for (let i = 0; i < 10; i++) {
+    const el = document.createElement('div');
+    el.className = 'sparkle';
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    el.style.background = color;
+    const angle = (Math.PI * 2 * i) / 10;
+    const dist = 28 + Math.random() * 26;
+    el.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+    el.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 700);
+  }
+}
+
+/* ===== COMBOS 🔥 ===== */
+function checkCombo() {
+  if (state.combo === 3) {
+    addCoins(5);
+    showPWFeedback('🔥 ¡Combo x2! +5 🪙', 'success');
+    soundStreak();
+  } else if (state.combo === 5) {
+    addCoins(10);
+    showPWFeedback('⚡ ¡Combo x3! +10 🪙', 'success');
+    soundStreak();
+  } else if (state.combo === 8) {
+    addCoins(15);
+    showPWFeedback('🌟 ¡Combo x4! +15 🪙', 'success');
+    soundStreak();
+  }
 }
 
 /* ===== INSIGNIAS 🏅 ===== */
@@ -933,6 +1010,7 @@ function onCardClick(el, card) {
   if (el.classList.contains('flipped') || el.classList.contains('matched')) return;
 
   ensureAudio();
+  if (state.musicEnabled && !musicTimer) startMusic();
   if (!state.started) {
     startTimer();
     updateStreak(); // <-- racha al primer click del día
@@ -964,6 +1042,10 @@ function checkMatch() {
       state.lock = false;
       soundMatch();
       speakRandom(VOICE_PRAISES);
+      state.combo += 1;
+      checkCombo();
+      const cr = a.el.getBoundingClientRect();
+      spawnSparkles(cr.left + cr.width / 2, cr.top + cr.height / 2);
       if (state.matchedPairs === totalPairs) win();
     }, 450);
   } else {
@@ -975,6 +1057,7 @@ function checkMatch() {
       soundNoMatch();
       speakRandom(VOICE_ENCOURAGE);
       state.failedPairs += 1;
+      state.combo = 0;
       loseLife();
     }, 900);
   }
@@ -1168,6 +1251,11 @@ if (wildcardBtn) wildcardBtn.addEventListener('click', useWildcard);
 
 // Voces
 if (voiceBtn) voiceBtn.addEventListener('click', toggleVoice);
+if (musicBtn) musicBtn.addEventListener('click', toggleMusic);
+if (tutorialStartBtn) tutorialStartBtn.addEventListener('click', () => {
+  if (tutorialEl) tutorialEl.classList.add('hidden');
+  if (state.musicEnabled) startMusic();
+});
 
 // Vidas
 if (refillLivesBtn) refillLivesBtn.addEventListener('click', refillLives);
@@ -1190,6 +1278,8 @@ updateAvatarUI();
 updatePowerupUI();
 renderAvatarPicker();
 syncVoiceBtn();
+syncMusicBtn();
+if (tutorialEl && !localStorage.getItem(SAVE_KEY)) tutorialEl.classList.remove('hidden');
 regenHearts();
 updateLivesUI();
 updateEggUI();
