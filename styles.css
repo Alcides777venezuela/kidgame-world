@@ -266,6 +266,36 @@ body {
 .practice-btn:hover { box-shadow: 0 6px 0 #6d28d9, 0 10px 20px rgba(0, 0, 0, 0.3); }
 .practice-btn:active { box-shadow: 0 1px 0 #6d28d9; }
 
+/* Banner modo práctica */
+.practice-banner {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  color: #fff;
+  border: 2px solid #c4b5fd;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  animation: dropDown 0.4s ease;
+}
+
+@keyframes dropDown {
+  from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+  to { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
+.exit-practice {
+  font-size: 0.8rem;
+  padding: 4px 14px;
+}
+
 .shop-btn {
   font-family: inherit;
   font-size: 1.3rem;

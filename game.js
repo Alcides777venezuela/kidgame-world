@@ -132,6 +132,8 @@ const gameOverInfo = document.getElementById('gameOverInfo');
 const refillLivesBtn = document.getElementById('refillLives');
 const waitGameOverBtn = document.getElementById('waitGameOver');
 const practiceBtn = document.getElementById('practiceBtn');
+const practiceBanner = document.getElementById('practiceBanner');
+const exitPracticeBtn = document.getElementById('exitPractice');
 // 🥚 Huevo Mágico refs
 const eggDisplay = document.getElementById('eggDisplay');
 const petDisplay = document.getElementById('petDisplay');
@@ -263,8 +265,13 @@ function regenHearts() {
   if (gained > 0) {
     state.lives = Math.min(state.livesMax, state.lives + gained);
     state.lastLifeRegen = state.lives >= state.livesMax ? now : base + gained * LIFE_REGEN_MS;
-    if (state.lives > 0) state.practiceMode = false;
-    saveGame();
+    if (state.lives > 0 && state.practiceMode) {
+      state.practiceMode = false;
+      saveGame();
+      syncPracticeBanner();
+    } else {
+      saveGame();
+    }
     updateLivesUI();
   }
 }
@@ -287,9 +294,28 @@ function gameOver() {
 
 function startPractice() {
   state.practiceMode = true;
+  saveGame();
+  syncPracticeBanner();
   if (gameOverEl) gameOverEl.classList.add('hidden');
   showPWFeedback('🎮 ¡Modo práctica! No ganarás monedas', 'info');
   resetGame({ keepLevel: true });
+}
+
+function syncPracticeBanner() {
+  if (!practiceBanner) return;
+  practiceBanner.classList.toggle('hidden', !state.practiceMode);
+}
+
+function exitPractice() {
+  state.practiceMode = false;
+  saveGame();
+  syncPracticeBanner();
+  showPWFeedback('✅ ¡Modo normal restaurado!', 'success');
+  if (state.lives <= 0) {
+    showGameOverScreen();
+  } else {
+    resetGame({ keepLevel: true });
+  }
 }
 
 function refillLives() {
@@ -301,6 +327,7 @@ function refillLives() {
   state.lives = state.livesMax;
   state.lastLifeRegen = Date.now();
   state.practiceMode = false;
+  syncPracticeBanner();
   state.finished = false;
   updateLivesUI();
   if (gameOverEl) gameOverEl.classList.add('hidden');
@@ -338,7 +365,8 @@ function saveGame() {
     badges: [...state.badges],
     threeStarLevels: state.threeStarLevels,
     perfectLevels: state.perfectLevels,
-    allLevelsDone: state.allLevelsDone
+    allLevelsDone: state.allLevelsDone,
+    practiceMode: state.practiceMode
   };
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -370,6 +398,7 @@ function loadGame() {
     state.threeStarLevels = data.threeStarLevels || 0;
     state.perfectLevels = data.perfectLevels || 0;
     state.allLevelsDone = data.allLevelsDone || false;
+    state.practiceMode = data.practiceMode || false;
   } catch (e) { /* ignorar */ }
 }
 
@@ -641,7 +670,11 @@ function showPWFeedback(msg, type = 'info') {
 }
 
 function useMagnifier() {
-  if (state.powerups.magnifier <= 0 || state.lock || state.finished) return;
+  if (state.powerups.magnifier <= 0) {
+    showPWFeedback('🪙 ¡No tienes Lupa! Cómprala en la tienda', 'error');
+    return;
+  }
+  if (state.lock || state.finished) return;
   state.powerups.magnifier -= 1;
   state.lock = true;
 
@@ -659,7 +692,11 @@ function useMagnifier() {
 }
 
 function usePause() {
-  if (state.powerups.pause <= 0 || state.finished) return;
+  if (state.powerups.pause <= 0) {
+    showPWFeedback('🪙 ¡No tienes Pausa! Cómprala en la tienda', 'error');
+    return;
+  }
+  if (state.finished) return;
   if (!state.started) return;
   state.powerups.pause -= 1;
   state.powerupActive = true;
@@ -680,7 +717,11 @@ function usePause() {
 }
 
 function useWildcard() {
-  if (state.powerups.wildcard <= 0 || state.lock || state.finished) return;
+  if (state.powerups.wildcard <= 0) {
+    showPWFeedback('🪙 ¡No tienes Comodín! Cómpralo en la tienda', 'error');
+    return;
+  }
+  if (state.lock || state.finished) return;
   if (state.flipped.length === 0) {
     showPWFeedback('❌ Voltea una carta primero', 'error');
     return;
@@ -1074,6 +1115,7 @@ if (voiceBtn) voiceBtn.addEventListener('click', toggleVoice);
 if (refillLivesBtn) refillLivesBtn.addEventListener('click', refillLives);
 if (waitGameOverBtn) waitGameOverBtn.addEventListener('click', waitForHearts);
 if (practiceBtn) practiceBtn.addEventListener('click', startPractice);
+if (exitPracticeBtn) exitPracticeBtn.addEventListener('click', exitPractice);
 
 /* ===== ARRANQUE ===== */
 loadGame();
@@ -1089,4 +1131,5 @@ updateEggUI();
 setInterval(regenHearts, 30000); // revisar regeneración cada 30s
 renderBadges();
 updateBadgeUI();
+syncPracticeBanner();
 resetGame();
