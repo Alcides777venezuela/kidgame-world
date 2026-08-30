@@ -795,6 +795,24 @@ function useWildcard() {
 }
 
 /* ===== TIENDA ===== */
+function applyScene() {
+  if (state.activeTheme === 'default') {
+    delete document.body.dataset.scene;
+  } else {
+    document.body.dataset.scene = state.activeTheme;
+  }
+}
+
+function activateTheme(key) {
+  if (!state.boughtThemes.includes(key)) return;
+  state.activeTheme = key;
+  saveGame();
+  applyScene();
+  renderShop();
+  soundCoin();
+  showPWFeedback(`🎨 ¡Tema activado!`, 'success');
+}
+
 function renderShop() {
   if (!shopItems) return;
   shopItems.innerHTML = '';
@@ -808,23 +826,32 @@ function renderShop() {
 
     const canAfford = state.coins >= item.cost;
 
+    const isActive = state.activeTheme === key;
     el.innerHTML = `
       <div class="shop-item-icon">${item.emoji}</div>
       <div class="shop-item-info">
         <div class="shop-item-label">${item.label}</div>
         <div class="shop-item-cost">🪙 ${item.cost}</div>
       </div>
-      <button class="shop-buy-btn${owned ? ' owned' : ''}${!canAfford && !owned ? ' no-funds' : ''}"
-              data-shop-key="${key}" ${owned ? 'disabled' : ''}>
-        ${owned ? '✅ Comprado' : 'Comprar'}
+      <button class="shop-buy-btn${owned ? ' owned' : ''}${isActive ? ' active-theme' : ''}${!canAfford && !owned ? ' no-funds' : ''}"
+              data-shop-key="${key}" ${owned && isActive ? 'disabled' : ''}>
+        ${isActive ? '✅ Usado' : (owned ? '🎨 Usar' : 'Comprar')}
       </button>
     `;
     shopItems.appendChild(el);
   });
 
-  // Event listeners
-  shopItems.querySelectorAll('.shop-buy-btn:not(.owned)').forEach(btn => {
-    btn.addEventListener('click', () => buyShopItem(btn.dataset.shopKey));
+  // Event listeners: comprar, o activar si ya es dueño del tema
+  shopItems.querySelectorAll('.shop-buy-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const k = btn.dataset.shopKey;
+      const it = SHOP_ITEMS[k];
+      if (it && it.type === 'theme' && state.boughtThemes.includes(k)) {
+        activateTheme(k);
+      } else {
+        buyShopItem(k);
+      }
+    });
   });
 }
 
@@ -840,9 +867,12 @@ function buyShopItem(key) {
 
   if (item.type === 'theme') {
     state.boughtThemes.push(key);
+    state.activeTheme = key;
+    saveGame();
+    applyScene();
     soundCoin();
     renderShop();
-    showPWFeedback(`🌌 ¡Tema "${item.label}" comprado!`, 'success');
+    showPWFeedback(`🌌 ¡Tema "${item.label}" comprado y activado!`, 'success');
   } else if (item.type === 'powerup') {
     state.powerups[item.pow] = (state.powerups[item.pow] || 0) + 1;
     soundCoin();
@@ -1167,4 +1197,5 @@ setInterval(regenHearts, 30000); // revisar regeneración cada 30s
 renderBadges();
 updateBadgeUI();
 syncPracticeBanner();
+applyScene();
 resetGame();

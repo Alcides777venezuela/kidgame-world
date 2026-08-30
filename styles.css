@@ -38,6 +38,8 @@ body {
 .app {
   width: 100%;
   max-width: 700px;
+  position: relative;
+  z-index: 1;
 }
 
 /* ===== Header ===== */
@@ -313,6 +315,96 @@ body {
 .exit-practice {
   font-size: 0.8rem;
   padding: 4px 14px;
+}
+
+/* ===== ESCENAS DE TEMA (transforman todo el juego) ===== */
+body[data-scene="tema-espacial"] {
+  background: linear-gradient(180deg, #0b0b2b 0%, #1a1040 45%, #2d1b69 100%);
+}
+
+body[data-scene="tema-espacial"]::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1.5px 1.5px at 20px 30px, #fff, transparent),
+    radial-gradient(1px 1px at 90px 140px, #ffe9a8, transparent),
+    radial-gradient(2px 2px at 160px 60px, #a8d8ff, transparent),
+    radial-gradient(1px 1px at 240px 180px, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 300px 90px, #ffd1f0, transparent),
+    radial-gradient(1px 1px at 370px 220px, #fff, transparent);
+  background-size: 420px 280px;
+  animation: starsTwinkle 5s ease-in-out infinite alternate;
+}
+
+@keyframes starsTwinkle {
+  from { opacity: 0.45; }
+  to { opacity: 1; }
+}
+
+body[data-scene="tema-marina"] {
+  background: linear-gradient(180deg, #0ea5e9 0%, #0369a1 60%, #0c4a6e 100%);
+}
+
+body[data-scene="tema-marina"]::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 15px 15px, rgba(255,255,255,0.55) 0 2px, transparent 3px),
+    radial-gradient(circle at 55px 45px, rgba(255,255,255,0.35) 0 3px, transparent 4px),
+    radial-gradient(circle at 95px 25px, rgba(255,255,255,0.5) 0 2px, transparent 3px);
+  background-size: 120px 120px;
+  animation: bubblesUp 5s linear infinite;
+}
+
+@keyframes bubblesUp {
+  from { background-position: 0 0; }
+  to { background-position: 0 -120px; }
+}
+
+body[data-scene="tema-dinosaurio"] {
+  background: linear-gradient(180deg, #064e3b 0%, #047857 50%, #0d9488 100%);
+}
+
+body[data-scene="tema-dinosaurio"]::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(3px 8px at 40px 60px, rgba(167, 243, 208, 0.5), transparent),
+    radial-gradient(4px 10px at 130px 30px, rgba(187, 247, 208, 0.4), transparent),
+    radial-gradient(3px 7px at 230px 90px, rgba(134, 239, 172, 0.45), transparent),
+    radial-gradient(5px 12px at 310px 50px, rgba(167, 243, 208, 0.35), transparent);
+  background-size: 380px 160px;
+  animation: leavesSway 7s ease-in-out infinite alternate;
+}
+
+@keyframes leavesSway {
+  from { background-position: 0 0; }
+  to { background-position: 40px 10px; }
+}
+
+/* Cartas con los colores de cada tema */
+.board[data-theme="tema-espacial"] .face.back {
+  background: linear-gradient(145deg, #4c1d95, #7c3aed);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.board[data-theme="tema-marina"] .face.back {
+  background: linear-gradient(145deg, #0c4a6e, #38bdf8);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.board[data-theme="tema-dinosaurio"] .face.back {
+  background: linear-gradient(145deg, #166534, #4ade80);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 .shop-btn {
