@@ -65,8 +65,8 @@ const state = {
   // Nuevo: Voces
   voicesEnabled: true,
   // Nuevo: Vidas (estilo Duolingo)
-  lives: 3,
-  livesMax: 3,
+  lives: 7,
+  livesMax: 7,
   lastLifeRegen: 0,
   // 🥚 Huevo Mágico
   eggStage: 0,       // 0=roto, 1=🥚frío, 2=🥚tibio, 3=🐣picando, 4=🐤nacido
@@ -245,7 +245,7 @@ if (window.speechSynthesis) {
 }
 
 /* ===== VIDAS (❤️ estilo Duolingo) ===== */
-const LIFE_REGEN_MS = 30 * 60 * 1000; // 1 corazón cada 30 minutos
+const LIFE_REGEN_MS = 3 * 60 * 1000; // 1 corazón cada 3 minutos
 const REFILL_COST = 20; // monedas para recargar vidas
 
 function updateLivesUI() {
@@ -388,7 +388,7 @@ function loadGame() {
     state.boughtThemes = data.boughtThemes || [];
     state.activeTheme = data.activeTheme || 'default';
     state.voicesEnabled = data.voicesEnabled !== false;
-    state.lives = Math.min(state.livesMax, data.lives ?? 3);
+    state.lives = Math.min(state.livesMax, data.lives ?? 7);
     state.lastLifeRegen = data.lastLifeRegen || 0;
     state.eggStage = data.eggStage ?? 0;
     state.eggHatched = data.eggHatched ?? false;
